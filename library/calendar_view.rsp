@@ -1,0 +1,1317 @@
+<!--
+
+	A WebViewWidget is a special type of WebView that has known interface functions written in 
+	JavaScript that handle actions dispatched when buttons are clicked in the WebView section header.
+	
+	This is a WebViewWidget for a data bound jQuery calendar.
+	
+	Actions initiated by clicking the action buttons in the WebView section header call the 
+	JavaScript interface functions.
+	
+	This WebViewWidget is written in Recital/VFP but it could equally be written in PHP or Python.
+	
+	WebViewWidgets are based on an MVC (Model View Controller) design architecture.
+	
+	Model		-- The model consists of application data and business rules. In this case a
+				   Calendar containing data stored internally that represent events.
+	
+	View		-- A view can be any output representation of data such as a form, grid or chart.
+				   In this case a Calendar is displayed.
+				   
+	Controller	-- The controller mediates input converting it to commands for the model or view.
+				   When writing a Lianja WebViewWidegt, the corresponding controller by convention 
+				   should be named xxx_controller (xxx being the name of the WebViewWidget).
+	               In the case of this WebViewWidget, calendar_controller.prg is the controller.
+	               Actions (such as adding a new event, deleting an event or updating an event) cause 
+	               the Model (the calendar) to call the controller whose job it is to handle the
+	               action which may result in updating a database table and ask the View to
+	               refresh its contents.
+	
+-->
+   
+<%@ Language=VFP %>     
+<% 
+//--
+// calendar.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_database  = getParameter("database", "") 
+private m_table  = getParameter("table", "") 
+private m_filter  = getParameter("filter", "") 
+private m_titlecolumn  = getParameter("titlecolumn", "")
+private m_startcolumn  = getParameter("startcolumn", "")
+private m_endcolumn  = getParameter("endcolumn", "")
+private m_alldaycolumn  = getParameter("alldaycolumn", "")
+private m_repeatingcolumn  = getParameter("repeatingcolumn", "")
+private m_eventtypecolumn  = getParameter("eventtypecolumn", "")
+private m_eventtypechoices = getParameter("eventtypechoices", "")
+private m_eventtypevalue  = getParameter("eventtypevalue", "")
+private m_keyexpr  = getParameter("keyexpr", "") 
+private m_keyvalue  = getParameter("keyvalue", "")
+private m_delegate  = getParameter("delegate", "") 
+private m_rowid  = getParameter("rowid", "rowid") 
+private m_view  = getParameter("view", "month") 
+private m_demo  = getParameter("demo", "false") 
+private m_sectionid = getParameter("sectionid", "")
+private m_pageid = getParameter("pageid", "")
+private m_columns = getParameter("columns", "")
+private m_hideformbar = getParameter("hideformbar", "")
+private m_readonly = getParameter("readonly", "")
+private m_customdelegatelib = getParameter("customdelegatelib", "")
+private m_daybackcolordelegate = getParameter("daybackcolordelegate", "")
+private m_eventbackcolordelegate = getParameter("eventbackcolordelegate", "eventbg")
+private m_eventforecolordelegate = getParameter("eventforecolordelegate", "eventfg")
+private m_aspectratio = getParameter("aspectratio", "")
+private m_autoheight = getParameter("autoheight", "false")
+private m_targetui = getParameter("targetui", "")
+
+// Private variables
+//--
+private m_event_type
+private m_title_value
+private m_start_value
+private m_end_value
+private m_allday_value
+private m_repeating_value
+private m_rowid_value
+private m_id_value
+private m_day
+private m_month
+private m_endmonth
+private m_year
+private m_hour
+private m_min
+private m_event
+private m_formbarheight
+private m_editable
+private m_eventbg
+private m_eventfg
+private m_daydates
+private m_daycolors
+private m_eventchoices
+private m_eventcolors[]
+private m_autoheightoffset
+private m_phonegap = iif(isPhoneGap(), "true", "false")
+
+if m_targetui="phone" or m_targetui="tablet"
+	m_phonegap = "true"
+endif
+
+m_autoheightoffset = 0
+m_daydates = ""
+m_daycolors = ""
+
+if len(m_aspectratio)=0
+	m_aspectratio = "1.35"
+endif
+
+if len(m_autoheight)=0
+	m_autoheight = "false"
+endif
+
+// setup the event choice colors
+if len(m_eventtypechoices) > 0
+	if not StartsWith(m_eventtypechoices, "select ")
+		m_eventchoices = explode(",", m_eventtypechoices)
+		for j=1 to alen(m_eventchoices)
+			pos = at(":", m_eventchoices[j])
+			if pos > 0
+				ecolor = substr(m_eventchoices[j], pos+1)
+				m_eventchoices[j] = substr(m_eventchoices[j], 1, pos-1)
+				m_eventcolors[ m_eventchoices[j] ] = ecolor
+			endif
+		endfor
+	endif
+endif
+
+function eventbg(etype)
+	local color
+	local acolor
+	etype = alltrim(etype)
+	color = getMember("m_eventcolors", etype, "")
+	if len(color)>0
+		acolor = explode(":", color)
+		if len(acolor)>1
+			return acolor[1]
+		else
+			return ""
+		endif
+	else
+		return ""
+	endif
+endfunc
+
+function eventfg(etype)
+	local color
+	local acolor
+	etype = alltrim(etype)
+	color = getMember("m_eventcolors", etype, "")
+	if len(color)>0
+		acolor = explode(":", color)
+		if len(acolor)>0
+			return acolor[2]
+		else
+			return ""
+		endif
+	else
+		return ""
+	endif
+endfunc
+
+// init
+//--
+if m_hideformbar="true" or m_phonegap="true"
+	m_formbarheight = "height:0;display:none;"
+	m_margintop = "12px"
+else
+	m_formbarheight = "height:55px;"
+	m_margintop = "0px"
+	m_autoheightoffset = 90
+endif
+
+if m_autoheight="true"
+	m_overflow_y = "overflow-y:hidden;"
+else
+	m_overflow_y = ""
+endif
+
+if m_phonegap="true"
+	m_autoheightoffset = 40
+	m_overflow_y = "overflow-y:hidden;"
+endif
+
+if m_readonly = "true"
+	m_editable = "false"
+else
+	m_editable = "true"
+endif
+
+m_database = lower(m_database)
+m_table = lower(m_table)
+m_view = lower(m_view)
+if m_view = "week"
+	m_view = "agendaWeek"
+elseif m_view = "day"
+	m_view = "agendaDay"
+endif
+
+if (len(m_table)=0)
+	m_table = "employees_calendar"
+endif
+
+if len(m_customdelegatelib) > 0
+	set procedure to &m_customdelegatelib
+endif
+
+if len(m_database) > 0 and database() != m_database
+	open database &m_database
+endif
+
+// need to reference mobile WebViewWidgets references properly
+private m_libpath
+if isPhoneGap()
+	m_libpath = "library"
+else
+	m_libpath = "../../library"
+endif
+ 
+text raw
+<html>
+<head>
+
+endtext
+
+if isPhoneGap()
+	text raw
+		<link type="text/css" href="library/jquery-1.11.2/jquery-ui.min.css" rel="stylesheet" />
+		<script type="text/javascript" src="library/jquery-1.11.2/jquery-1.11.2.min.js"></script>
+		<script type="text/javascript" src="library/jquery-1.11.2/jquery-ui.min.js"></script>
+		<link rel='stylesheet' type='text/css' href='library/fullcalendar/fullcalendar.css' />
+		<link rel='stylesheet' type='text/css' href='library/fullcalendar/fullcalendar.print.css' media='print' />
+		<script type='text/javascript' src='library/fullcalendar/fullcalendar.js'></script>
+		<link rel='stylesheet' href='library/bootstrap/css/bootstrap.min.css' type='text/css'/>
+		<link rel='stylesheet' href='library/bootstrap/css/bootstrap-theme.min.css' type='text/css'/>
+		<script type='text/javascript' src='library/bootstrap/js/bootstrap.min.js'></script>
+		<script type='text/javascript' src='library/bootstrap-checkbox/dist/js/bootstrap-checkbox.min.js'></script>
+	endtext
+else
+	text raw
+		<link type="text/css" href="&m_libpath/jquery/css/smoothness/jquery-ui.css" rel="stylesheet" />
+		<script type="text/javascript" src="&m_libpath/jquery/js/jquery.min.js"></script>
+		<script type="text/javascript" src="&m_libpath/jquery/js/jquery-ui.min.js"></script>
+		<link rel='stylesheet' type='text/css' href='&m_libpath/fullcalendar/fullcalendar.css' />
+		<link rel='stylesheet' type='text/css' href='&m_libpath/fullcalendar/fullcalendar.print.css' media='print' />
+		<script type='text/javascript' src='&m_libpath/fullcalendar/fullcalendar.js'></script>
+		<script type="text/javascript" src="&m_libpath/jquery/jquery-timepicker/jquery.timepicker.js"></script>
+		<link rel="stylesheet" type="text/css" href="&m_libpath/jquery/jquery-timepicker/jquery.timepicker.css" />
+		<script type="text/javascript" src="&m_libpath/jquery/jquery-timepicker/lib/base.js"></script>
+		<link rel="stylesheet" type="text/css" href="&m_libpath/jquery/jquery-timepicker/lib/base.css" />
+	endtext
+	if m_targetui = "phone" or m_targetui = "tablet"
+		text raw
+			<link rel='stylesheet' href='library/bootstrap/css/bootstrap.min.css' type='text/css'/>
+			<link rel='stylesheet' href='library/bootstrap/css/bootstrap-theme.min.css' type='text/css'/>
+			<script type='text/javascript' src='library/bootstrap/js/bootstrap.min.js'></script>
+			<script type='text/javascript' src='library/bootstrap-checkbox/dist/js/bootstrap-checkbox.min.js'></script>
+		endtext
+	endif
+endif
+
+text raw
+<!-- Define any specific HTML styles that the WebViewWidget uses here -->
+<style type='text/css'>
+
+body {
+	&m_overflow_y
+	margin: 0px;
+	text-align: center;
+	font-size: 14px;
+	font-family: Lucida Grande,Helvetica,Arial,Verdana,sans-serif;
+}
+
+input[type="text"] {
+	width: 95%;
+}
+
+.event_input {
+	min-height:20px;
+}
+
+#calendar {
+	width: 100%;
+	margin: 0 auto;
+	margin-top: &m_margintop;
+}
+
+#event-input-panel {
+	width: 100%;
+	&m_formbarheight
+	margin: 0 auto;
+	background: #f5f5f5;
+	border-bottom: 1px solid lightgray;
+	margin-top: 0px;
+	margin-bottom: 6px;
+	font-size: 12px;
+	font-weight: bold;
+}
+
+#event-input-table {
+	margin: 0 auto;
+	&m_formbarheight
+	width: 100%;
+	background: #f5f5f5;
+	border-bottom: 0px solid lightgray;
+	font-size: 12px;
+	font-weight: bold;
+}
+#event-input-panel-phonegap {
+	height: 345px;
+	background-color: #fafafa;
+	position:absolute;
+	top:0px;
+	left:0px;
+	right:0px;
+	display:none;
+	z-index:100;
+}
+
+endtext
+
+if isPhoneGap() or &m_phonegap
+	text raw
+		.modal-backdrop {
+			top: 345px !important;
+		}
+
+		.hide {
+			display:none !important;
+		}
+
+		table {
+			border-spacing: 5px;
+			border-collapse: initial;
+		}
+
+		input[type="text"] {
+			width: 100%;
+		}
+		
+		.modal-body {
+			padding-top: 0px;
+			padding-bottom: 0px;
+			padding-left: 15px;
+			padding-right: 15px;
+		}
+		
+		.fc-event {
+			border-style: none; 
+			border-width: 0; 
+			font-size: .4em;
+			cursor: default;
+		}
+		
+		.fc-corner-right .fc-event-inner {
+			border-right-width: 0px !important;
+		}
+		
+	endtext
+endif
+
+text raw
+
+</style>
+
+<!-- Custom WebViewWidget implementation -->
+<script type='text/javascript'>
+
+//--------------------------------------------------------------------------------
+// global variables
+var m_data = "";
+var m_dataold = "";
+var m_rowid = 0;
+var m_id = 0;
+var m_action = "";
+var m_editable = &m_editable;
+	
+//--------------------------------------------------------------------------------
+// Lianja interface functions:
+//
+//		lianja_save()
+//		lianja_cancel()
+//		lianja_add()
+//		lianja_delete()
+//		lianja_first()
+//		lianja_previous()
+//		lianja_next()
+//		lianja_last()
+//		lianja_edit()
+//		lianja_resize()
+//
+
+//--------------------------------------------------------------------------------
+function lianja_addevent()
+{
+    resetEvents();
+    $("#event_start_date").val(dateToStringISO(new Date(Date.now())));
+    $("#event_end_date").val(dateToStringISO(new Date(Date.now())));
+    $("#event_start_time").val("9:00am");
+    $("#event_end_time").val("5:00pm");
+    m_data = "";
+    m_action = "add";
+    callDelegate( getFormData("select") );
+}
+
+//--------------------------------------------------------------------------------
+function lianja_removeevent()
+{
+	if (m_data.length == 0)
+	{
+		Lianja.showMessage("You must select an event first");
+		return;
+	}
+	m_data = getFormData("delete");
+	performAction();
+}
+
+//--------------------------------------------------------------------------------
+function lianja_updateevent()
+{
+    if (!validateForm()) return;
+	m_data = getFormData(m_action);
+	if (m_data == m_dataold) return;
+	performAction();
+	m_dataold = m_data
+}
+
+//--------------------------------------------------------------------------------
+function lianja_save()
+{
+    if (!validateForm()) return;
+	m_data = getFormData(m_action);
+	if (m_data == m_dataold) return;
+	performAction();
+	m_dataold = m_data
+}
+
+//--------------------------------------------------------------------------------
+function lianja_cancel()
+{
+    if (!validateForm()) return;
+	m_data = getFormData("cancel");
+	performAction();
+}
+
+//--------------------------------------------------------------------------------
+function lianja_add()
+{
+    resetEvents();
+    $("#event_start_date").val(dateToStringISO(new Date(Date.now())));
+    $("#event_end_date").val(dateToStringISO(new Date(Date.now())));
+    $("#event_start_time").val("9:00am");
+    $("#event_end_time").val("5:00pm");
+    m_data = "";
+    m_action = "add";
+    callDelegate( getFormData("select") );
+    $("#event_title").focus();
+}
+
+//--------------------------------------------------------------------------------
+function lianja_delete()
+{
+	if (m_data.length == 0)
+	{
+		Lianja.showMessage("You must select an event first");
+		return;
+	}
+	m_data = getFormData("delete");
+	performAction();
+}
+
+//--------------------------------------------------------------------------------
+function lianja_first()
+{
+	// not implemented
+}
+
+//--------------------------------------------------------------------------------
+function lianja_previous()
+{
+	// not implemented
+}
+
+//--------------------------------------------------------------------------------
+function lianja_next()
+{
+	// not implemented
+}
+
+//--------------------------------------------------------------------------------
+function lianja_last()
+{
+	// not implemented
+}
+
+//--------------------------------------------------------------------------------
+function lianja_edit()
+{
+	// not implemented
+}
+
+//--------------------------------------------------------------------------------
+function lianja_resize()
+{
+	// not implemented
+}
+
+//================================================================================
+function validateForm()
+{
+	var value;
+	var value2;
+	
+	if (&m_phonegap)
+	{
+		return pg_validateForm();
+	}
+	
+	//value = ($("#event_type").val()).trim();
+	//if (value.length == 0)
+	//{
+	//	Lianja.showMessage("You must specify an event type");
+	//	return false;
+	//}
+	value = ($("#event_title").val()).trim();
+	if (value.length == 0)
+	{
+		Lianja.showMessage("You must specify an event title");
+		return false;
+	}
+	value = ($("#event_start_date").val()).trim();
+	if (value.length == 0)
+	{
+		Lianja.showMessage("You must specify an event start date");
+		return false;
+	}
+	value2 = $("#event_allday").attr("checked");
+	value = ($("#event_start_time").val()).trim();
+	if (value.length == 0 && !value2)
+	{
+		Lianja.showMessage("You must specify an event start time");
+		return false;
+	}
+	return true;
+}
+
+//================================================================================
+function pg_validateForm()
+{
+	var value;
+	var value2;
+	
+	value = ($("#pg_event_title").val()).trim();
+	if (value.length == 0)
+	{
+		Lianja.showMessage("You must specify an event title");
+		return false;
+	}
+	value = ($("#pg_event_start_datetime").val()).trim();
+	if (value.length == 0)
+	{
+		Lianja.showMessage("You must specify an event start date");
+		return false;
+	}
+	return true;
+}
+
+//--------------------------------------------------------------------------------
+function getFormData(action)
+{
+	if (&m_phonegap)
+	{
+		return pg_getFormData(action);
+	}
+    var oevent;
+    oevent = new Object();
+    oevent.database = "&m_database";
+    oevent.table = "&m_table";
+    oevent.columns = "&m_columns"
+    oevent.keyvalue = "&m_keyvalue";
+    oevent.keyexpr = "&m_keyexpr";
+    oevent.title = $("#event_title").val();
+    oevent.start_date = $("#event_start_date").val();
+    oevent.end_date = $("#event_end_date").val();
+    oevent.start_time = timeToStringISO($("#event_start_time").val());
+    oevent.end_time = timeToStringISO($("#event_end_time").val());
+    oevent.allDay = ($("#event_allday").attr("checked"))=='checked'?'true':'false';
+    oevent.repeat = ($("#event_repeat").attr("checked"))=='checked'?'true':'false';
+    oevent.rowid = m_rowid;
+    oevent.id = m_id;
+    oevent.action = action;
+    oevent.sectionid = "&m_sectionid";
+    oevent.eventtype = "&m_eventtypecolumn";
+    oevent.eventtypevalue = $("#event_type").val();
+    return JSON.stringify(oevent);
+}
+
+//--------------------------------------------------------------------------------
+function pg_getFormData(action)
+{
+    var oevent;
+	var start_str;
+	var end_str;
+	
+	start_str = $("#pg_event_start_datetime").val();
+	end_str = $("#pg_event_end_datetime").val();
+	
+    oevent = new Object();
+    oevent.database = "&m_database";
+    oevent.table = "&m_table";
+    oevent.columns = "&m_columns"
+    oevent.keyvalue = "&m_keyvalue";
+    oevent.keyexpr = "&m_keyexpr";
+    oevent.title = $("#pg_event_title").val();
+    oevent.start_date = start_str.substring(0,10);
+    oevent.end_date = end_str.substring(0,10);
+    oevent.start_time = start_str.substring(11);
+    oevent.end_time = end_str.substring(11);
+    oevent.allDay = ($("#pg_event_allday").attr("checked"))=='checked'?'true':'false';
+    oevent.repeat = ($("#pg_event_repeat").attr("checked"))=='checked'?'true':'false';
+    oevent.rowid = m_rowid;
+    oevent.id = m_id;
+    oevent.action = action;
+    oevent.sectionid = "&m_sectionid";
+    oevent.eventtype = "&m_eventtypecolumn";
+    oevent.eventtypevalue = $("#pg_event_type").val();
+    return JSON.stringify(oevent);
+}
+
+//--------------------------------------------------------------------------------
+function resetEvents()
+{
+	if (&m_phonegap)
+	{
+		pg_resetEvents();
+		return;
+	}
+	else
+	{
+		$("#event_type").val("");
+		$("#event_title").val("");
+		$("#event_start_date").val("");
+		$("#event_end_date").val("");
+		$("#event_start_time").val("");
+		$("#event_end_time").val("");
+		$("#event_allday").prop("checked", false);
+		$("#event_repeat").prop("checked", false);
+	}
+}
+
+//--------------------------------------------------------------------------------
+function pg_resetEvents()
+{
+	$("#pg_event_type").val("");
+	$("#pg_event_title").val("");
+	$("#pg_event_start_datetime").val("");
+	$("#pg_event_end_datetime").val("");
+	$("#pg_event_allday").prop("checked", false);
+	$("#pg_event_repeat").prop("checked", false);
+}
+
+//--------------------------------------------------------------------------------
+function dateToString(d)
+{
+	var month;
+	var day;
+	var year;
+	var dateString;
+	if (typeof(d)!="object" || d == null) return "";
+	month = d.getMonth() + 1;
+	day = d.getDate();
+	year = d.getFullYear();
+	if (month < 10) month = "0" + month;
+	if (day < 10) day = "0" + day;	
+	dateString = month + "/";
+	dateString += day + "/";
+	dateString += year;
+	return dateString;
+}
+
+//--------------------------------------------------------------------------------
+function dateToStringISO(d)
+{
+	if (typeof(d)!="object" || d == null) return "";
+	return $.datepicker.formatDate("yy-mm-dd", d);
+}
+
+
+//--------------------------------------------------------------------------------
+function datetimeToStringISO(d)
+{
+	if (typeof(d)!="object" || d == null) return "";
+	var str = $.datepicker.formatDate("yy-mm-dd", d);
+	str = str + "T" + timeToStringISO(d);
+	return str;
+}
+
+
+//--------------------------------------------------------------------------------
+function convertTimeString(str)
+{
+	var time;
+	var hour;
+	var min;
+	var offset = 0;
+
+	if (str.length == 0) return "";
+	if (str.match("pm$")=="pm") offset = 12;
+	time = str.split(":");
+	hour = parseInt(time[0]);
+	if (hour == 12) hour = hour - 12;
+	hour = hour + offset;
+	min = time[1];
+	if (hour < 10) hour = "0" + hour.toString();
+	if (min.length < 4) min = "0" + min;
+	min = min.slice(0,2);
+	return hour + ":" + min;
+}
+
+//--------------------------------------------------------------------------------
+function timeToString(d)
+{
+	var hour;
+	var min;
+	var postfix = "pm";
+	if (typeof(d)=="string") return convertTimeString(d);
+	if (typeof(d)!="object" || d == null) return "";
+	hour = d.getHours();
+	min = d.getMinutes();
+	if (hour < 12)
+	{
+		postfix = "am";
+	}
+	else
+	{
+		hour = hour - 12;
+	}
+	if (min < 10)
+	{
+		postfix = "0" + postfix;
+	}
+	if (hour == 0) hour = 12;
+	return hour + ":" + min + postfix;
+}
+
+//--------------------------------------------------------------------------------
+function timeToStringISO(d)
+{
+	var hour;
+	var min;
+	var secs;
+	if (typeof(d)=="string") return convertTimeString(d);
+	if (typeof(d)!="object" || d == null) return "";
+	hour = d.getHours();
+	min = d.getMinutes();
+	secs = d.getSeconds();
+	if (hour < 10) hour = "0" + hour;
+	if (min < 10) min = "0" + min;
+	if (secs < 10) secs = "0" + secs;
+	return hour + ":" + min + ":" + secs;
+}
+
+//--------------------------------------------------------------------------------
+function refreshForm(event)
+{
+	if (&m_phonegap)
+	{
+		pg_refreshForm(event);
+		return;
+	}
+	
+    var start_date;
+    var end_date;
+    var start_time;
+    var end_time;
+ 
+    start_date = dateToStringISO(event.start);
+    end_date = dateToStringISO(event.end);
+    start_time = timeToString(event.start);
+    end_time = timeToString(event.end);
+    var allDay = (typeof(event.allDay) != 'undefined') ? event.allDay : false;
+    var repeat = (typeof(event.id) != 'undefined') ? event.id : 0;
+    if (event.type != null) $("#event_type").val(event.type);
+    else $("#event_type").val(""); 
+    if (event.title != null) $("#event_title").val(event.title);
+    else $("#event_title").val(""); 
+    $("#event_start_date").val(start_date);
+    $("#event_end_date").val(end_date);
+    $("#event_start_time").val(start_time);
+    $("#event_end_time").val(end_time);
+    $("#event_allday").prop("checked", allDay);
+    $("#event_repeat").prop("checked", repeat != 0);
+    m_id = (typeof(event.id) != 'undefined') ? event.id : 0;
+   	m_rowid = (typeof(event.rowid) != 'undefined') ? event.rowid : 0;
+	m_rowid = m_rowid + "";
+	m_data = getFormData("update");
+	m_dataold = m_data;
+}
+
+//--------------------------------------------------------------------------------
+function pg_refreshForm(event)
+{
+    var start_date;
+    var end_date;
+ 	var allday;
+	var repeat;
+ 
+    start_date = datetimeToStringISO(event.start);
+    end_date = datetimeToStringISO(event.end);
+    var allDay = (typeof(event.allDay) != 'undefined') ? event.allDay : false;
+    var repeat = (typeof(event.id) != 'undefined') ? event.id : 0;
+    if (event.type != null) $("#pg_event_type").val(event.type);
+    else $("#pg_event_type").val(""); 
+    if (event.title != null) $("#pg_event_title").val(event.title);
+    else $("#pg_event_title").val(""); 
+    $("#pg_event_start_datetime").val(start_date);
+    $("#pg_event_end_datetime").val(end_date);
+    $("#pg_event_allday").prop("checked", allDay);
+    $("#pg_event_repeat").prop("checked", repeat != 0);
+    m_id = (typeof(event.id) != 'undefined') ? event.id : 0;
+   	m_rowid = (typeof(event.rowid) != 'undefined') ? event.rowid : 0;
+	m_rowid = m_rowid + "";
+	m_data = getFormData("update");
+	m_dataold = m_data;
+}
+
+//--------------------------------------------------------------------------------
+function performAction()
+{
+	result = Lianja.evaluate("calendar_controller('" + m_data + "')");
+	if (typeof Lianja.refreshSection !== 'undefined') 
+	{
+		Lianja.refreshSection("&m_sectionid", undefined, undefined, true);
+	}
+	else { 
+		location.reload();
+	}
+	if (typeof(result) != 'boolean') return false;
+	return result;
+}
+
+//--------------------------------------------------------------------------------
+function callClickDelegate(data)
+{
+	if ("&m_delegate" == "") return;
+	// see if there is a JavaScript delegate and if not evaluate on the server
+	try
+	{
+		if (Lianja.isDevMode())
+		{
+			var result = Lianja.evaluate("javascript:&m_delegate('" + data + "');");
+			if (typeof result === 'string' && result == 'error: undefined function')
+			{
+				throw "error";
+			}
+		}
+		else
+		{
+			eval("window.parent.&m_delegate('" + data + "')");
+		}
+	}
+	catch (e)
+	{
+		Lianja.evaluate("&m_delegate('" + data + "')");
+	}
+}
+
+//--------------------------------------------------------------------------------
+function showInputPanelPhoneGap(state)
+{
+	var caption = m_action.substring(0,1).toUpperCase() + m_action.substring(1);
+	
+	if (state) 
+	{
+		$('#pg-event-update-button').text(caption);
+		$('#event-input-panel-phonegap').modal('show');
+		$('#event-input-panel-phonegap').removeClass('hide');
+	}
+	else 
+	{	
+		$('#event-input-panel-phonegap').modal('hide');
+	}
+}
+
+//--------------------------------------------------------------------------------
+function pg_deleteEvent()
+{
+	lianja_removeevent();
+}
+
+//--------------------------------------------------------------------------------
+function pg_updateEvent()
+{
+	lianja_updateevent();
+}
+
+//--------------------------------------------------------------------------------
+function callColorDelegate(id, date)
+{
+	if (id == "daybackcolor")
+	{
+		var dow = date.getDay()+1;
+		if (dow == 1 || dow == 7) return "pink";
+		if ("&m_daybackcolordelegate" == "") return "";
+	}
+	if (id == "dayforecolor")
+	{
+		if ("&m_dayforcolordelegate" == "") return "";
+	}
+}
+
+//--------------------------------------------------------------------------------
+function patternDateMatch(d1, d2)
+{
+	if (d1.indexOf("/") == 0)
+	{
+		var patt = new RegExp(d1);
+		return patt.test(d2);
+	}
+	var values1 = d1.split("-");
+	var values2 = d2.split("-");
+	if (values1[0] == "*" && values1[1] == values2[1] && values1[2] == values2[2]) return true;
+	if (values1[1] == "*" && values1[0] == values2[0] && values1[2] == values2[2]) return true;
+	if (values1[2] == "*" && values1[0] == values2[0] && values1[1] == values2[1]) return true;
+	return false;
+}
+
+//--------------------------------------------------------------------------------
+$(document).ready(function() {
+
+	var date = new Date();
+	var d = date.getDate();
+	var m = date.getMonth();
+	var y = date.getFullYear();
+	var events = [];
+	var headerbuttons;
+	var buttons; 
+	
+	buttons = 'agendaDay,agendaWeek,month spacer';
+	
+	if (&m_phonegap)
+	{
+		headerbuttons = 'spacer';
+		buttons = 'prev,today,agendaDay,agendaWeek,month,next';
+	}
+	else if (m_editable)
+	{
+		headerbuttons = 'spacer add remove update prevYear,prev,next,nextYear today';
+	}
+	else
+	{
+		headerbuttons = 'spacer prevYear,prev,next,nextYear today';
+	}
+		
+	$('#calendar').fullCalendar({  
+		mobileView: &m_phonegap,
+		header: {
+			left: headerbuttons,
+			center: 'title',
+			center2: buttons,
+			right: buttons
+		},
+		buttonText: {
+			prev: '&nbsp;&#9664;&nbsp;',
+			next: '&nbsp;&#9654;&nbsp;',
+			prevYear: '&nbsp;&lt;&lt;&nbsp;',
+			nextYear: '&nbsp;&gt;&gt;&nbsp;',
+			today: 'Today',
+			spacer: '',
+			add: 'New',
+			remove: 'Delete',
+			update: 'Update',
+			day: 'Day',
+			week: 'Week',
+			month: 'Month',
+			agenda: 'Agenda'
+		},
+		addEvent: lianja_addevent,
+		removeEvent: lianja_removeevent,
+		updateEvent: lianja_updateevent,
+		theme: true,
+		editable: &m_editable,
+		defaultView: '&m_view',
+		selectable: true,
+		aspectRatio: &m_aspectratio,
+		autoHeight: &m_autoheight,
+		autoHeightOffset: &m_autoheightoffset,
+		select: function(startDate, endDate, allDay, jsEvent, view ) {
+	        resetEvents();
+			if (&m_phonegap)
+			{
+				$("#pg_event_start_datetime").val(datetimeToStringISO(startDate));
+			}
+			else
+			{
+				var start_date = dateToStringISO(startDate);
+				var end_date = dateToStringISO(endDate);
+				if (end_date == "") end_date = start_date;
+				$("#event_start_date").val(start_date);
+				$("#event_end_date").val(end_date);
+				$("#event_start_time").val("9:00am");
+				$("#event_end_time").val("5:00pm");
+			}
+    		m_data = "";
+    		m_action = "add";
+    		callClickDelegate( getFormData("select") );
+ 			if (&m_phonegap) showInputPanelPhoneGap(true);
+			if (&m_phonegap) $("#pg_event_title").focus();
+			else $("#event_title").focus();
+		},
+		eventClick: function(event) {
+	       	refreshForm(event);
+	        m_action = "update";
+	        callClickDelegate(getFormData("eventclick"));
+			if (&m_phonegap) showInputPanelPhoneGap(true);
+			if (&m_phonegap) $("#pg_event_title").focus();
+			else $("#event_title").focus();
+		},			
+		eventDrop: function(event,dayDelta,minuteDelta,allDay,revertFunc) {
+        	refreshForm(event);
+	        m_action = "update";
+	        m_dataold = "";
+	        lianja_save();
+	        callClickDelegate(getFormData("eventclick"));
+		},
+	    events: function(start, end, callback) {
+            var events = [
+endtext
+
+if m_demo = "true"
+	? "{ title:'All Day Event', start: new Date(y, m, 1), rowid: 0 },"
+	? "{ title: 'Long Event', start: new Date(y, m, d-5), end: new Date(y, m, d-2), rowid: 0 },"
+	? "{ id: 999, title: 'Repeating Event', start: new Date(y, m, d-3, 16, 0), allDay: false, rowid: 0 },"
+	? "{ id: 999, title: 'Repeating Event', start: new Date(y, m, d+4, 16, 0), allDay: false, rowid: 0 },"
+	? "{ title: 'Meeting', start: new Date(y, m, d, 10, 30), allDay: false, rowid: 0 },"
+	? "{ title: 'Lunch', start: new Date(y, m, d, 12, 0), end: new Date(y, m, d, 14, 0), allDay: false, rowid: 0 },"
+	? "{ title: 'Birthday Party', start: new Date(y, m, d+1, 19, 0), end: new Date(y, m, d+1, 22, 30), allDay: false, rowid: 0 }"	
+else			
+	// fetch the events from the database!table
+	set hours to 24
+	tmpfile = sys(2015)
+	set sqlrowid on
+	
+	if len(alltrim(m_eventtypecolumn)) > 0 and len(alltrim(m_eventtypevalue)) > 0
+		m_querytype = " and " + m_eventtypecolumn + " = '&m_eventtypevalue'"
+		m_querytypewhere = "where " + m_eventtypecolumn + " = '&m_eventtypevalue'"
+	else
+		m_querytype = ""
+		m_querytypewhere = ""
+	endif
+	
+	if not empty(alltrim(m_filter))
+		m_querytype = iif(empty(m_querytype), " and ", m_querytype+" and ") + m_filter
+		m_querytypewhere = iif(empty(m_querytypewhere), "where ", m_querytypewhere+" and ") + m_filter
+	endif
+	
+	if len(m_keyexpr)=0 or len(m_keyvalue)=0
+		select * from &m_table save as "&tmpfile" &m_querytypewhere
+	else
+		if type("&m_keyvalue") = "N"
+			select * from &m_table where &m_keyexpr = &m_keyvalue &m_querytype save as "&tmpfile"
+		else
+			select * from &m_table where &m_keyexpr = "&m_keyvalue" &m_querytype save as "&tmpfile"
+		endif
+	endif
+
+	set sqlrowid off
+	use "&tmpfile" in 0 current
+	goto top
+	
+	scan 
+		if len(alltrim(m_eventtypecolumn)) > 0
+			m_event_type = '"' + alltrim(&m_eventtypecolumn) + '"'
+		else
+			m_event_type = '""'
+		endif
+		//m_title_value = alltrim(&m_titlecolumn)
+		m_title_value = str_replace(['],"\'",alltrim(&m_titlecolumn))
+		m_start_value = &m_startcolumn
+		m_end_value = &m_endcolumn
+		m_allday_value = &m_alldaycolumn
+		m_rowid_value = rowid
+		if &m_repeatingcolumn > 0
+			m_id_value = &m_repeatingcolumn
+		else
+			m_id_value = 0
+		endif
+		m_month = month(m_start_value)-1
+		do while m_month < 12
+			m_event = "{"
+			if m_id_value != 0
+				m_event = m_event + "id: &m_id_value,"
+			endif
+			m_event = m_event + [type: &m_event_type,]
+			m_event = m_event + "title: '&m_title_value',"
+			m_day = day(m_start_value)
+			m_year = year(m_start_value)
+			m_hour = hour(m_start_value)
+			m_min = minute(m_start_value)
+			m_event = m_event + "start: new Date(&m_year,&m_month,&m_day,&m_hour,&m_min),"
+			m_day = day(m_end_value)
+			m_endmonth = month(m_end_value)-1
+			m_year = year(m_end_value)
+			m_hour = hour(m_end_value)
+			m_min = minute(m_end_value)
+			m_event = m_event + "end: new Date(&m_year,&m_endmonth,&m_day,&m_hour,&m_min),"
+			if m_allday_value
+				m_event = m_event + "allDay: true,"
+			else
+				m_event = m_event + "allDay: false,"
+			endif
+			if len(m_eventbackcolordelegate) > 0
+				m_eventbg = &m_eventbackcolordelegate(&m_event_type)
+				if len(m_eventbg) > 0
+					m_event = m_event + "backgroundColor: '" + m_eventbg + "',"
+				endif
+			endif
+			if len(m_eventforecolordelegate) > 0
+				m_eventfg = &m_eventforecolordelegate(&m_event_type)
+				if len(m_eventfg) > 0
+					m_event = m_event + "textColor: '" + m_eventfg + "',"
+				endif
+			endif
+			m_event = m_event + "rowid: &m_rowid_value"
+			m_event = m_event + "}"
+
+			// need to handle repeating events for the remainder of the year
+			if m_id_value = 0
+				if recno() != reccount() 
+					m_event = m_event + ","
+				endif
+				? m_event
+				exit
+			else
+				m_month = m_month + 1
+				if m_month < 12 or recno() != reccount() 
+					m_event = m_event + ","
+				endif
+				? m_event
+			endif
+		enddo
+	endscan
+	
+	if len(m_daybackcolordelegate) > 0
+		m_daydates = &m_daybackcolordelegate("dates")
+		m_daycolors = &m_daybackcolordelegate("colors")
+	else
+		m_daydates = ['2014-*-01', 'saturday', 'sunday']
+		m_daycolors = ['lightgreen', 'pink', 'pink']
+	endif
+	
+	use
+	erase '&tmpfile..dbf'
+	erase '&tmpfile..dbt'
+	set hours to 12
+endif
+
+text raw
+			]
+            callback(events);
+	    },
+		dayColors: function(date) {
+			var dates = [ &m_daydates ];
+			var colors = [ &m_daycolors ];
+			var d = dateToStringISO(date);
+			for (var i=0; i<dates.length; ++i)
+			{
+				if (dates[i].indexOf("*") >= 0 || dates[i].indexOf("/") == 0)
+				{
+					if (patternDateMatch(dates[i], d)) return colors[i];
+				}
+				else if (dates[i] == "saturday")
+				{
+					if (date.getDay() == 6) return colors[i];
+				}
+				else if (dates[i] == "sunday")
+				{
+					if (date.getDay() == 0) return colors[i];
+				}
+				if (dates[i] === d) return colors[i];
+			}
+		}
+	});
+	
+	// bind jQuery UI plugins the DOM
+	if (!&m_phonegap)
+	{
+		$("#event_start_date").datepicker();
+		$("#event_end_date").datepicker();
+		$("#event_start_time").timepicker();
+		$("#event_end_time").timepicker();
+		//showInputPanelPhoneGap(false);
+	}
+});
+</script>
+</head>
+
+<!-- Layout the WebViewWidget using standard HTML5 in the BODY tag here -->
+<body>
+endtext
+
+if !isPhoneGap() and !&m_phonegap
+	text
+	<div id='event-input-panel'>
+	<table id='event-input-table' cellpadding="0px" cellspacing="0px" border="0px" align="left">
+	<tr style="color:#387EA3;">
+	<td>&nbsp;Event Type</td>
+	<td>&nbsp;Event Title</td>
+	<td>&nbsp;Start Date</td>
+	<td>&nbsp;End Date</td>
+	<td>&nbsp;Start Time</td>
+	<td>&nbsp;End Time</td>
+	<td>&nbsp;All&nbsp;Day&nbsp;</td>
+	<td>&nbsp;Repeat&nbsp;</td>
+	</tr>
+	<tr>
+	endtext
+	if len(m_eventtypechoices) > 0
+		if StartsWith(m_eventtypechoices, "select ")
+			? '<td style="Align:left;">&nbsp;<input type="text" id="event_type"></td>'
+		else
+			? '<td style="Align:left;">&nbsp;<select id="event_type">'
+			for j=1 to alen(m_eventchoices)
+				? "<option value='" + m_eventchoices[j] + "'>" + m_eventchoices[j] + "</option>"
+			endfor
+			? "</select>"
+			? "</td>"
+		endif
+	else
+		? '<td style="Align:left;">&nbsp;<input type="text" id="event_type"/></td>'
+	endif
+	text raw
+	<td style="Align:left;">&nbsp;<input type="text" class="event_input" id="event_title"/></td>
+	<td style="Align:left;">&nbsp;<input type="text" class="event_input" id="event_start_date" data-date-format="yyyy-mm-dd"/></td>
+	<td style="Align:left;">&nbsp;<input type="text" class="event_input" id="event_end_date" data-date-format="yyyy-mm-dd"/></td>
+	<td style="Align:left;">&nbsp;<input type="text" class="event_input" id="event_start_time"/></td>
+	<td style="Align:left;">&nbsp;<input type="text" class="event_input" id="event_end_time"/></td>
+	<td style="Align:left;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="event_allday"/></td>
+	<td style="Align:left;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox" id="event_repeat"/></td>
+	</tr>
+	</table>
+	</div>
+	</div>
+	endtext
+endif 
+
+if isPhoneGap() or &m_phonegap
+	text raw
+	<div id="event-input-panel-phonegap" class="modal hide fade in" style="display: none;">
+    <h3>Event Details</h3>
+    <div class="modal-body">
+       <table cellspacing="5px">
+		<tr>
+            <td style="Align:left;" width="120px">Type</td>
+	endtext
+	if len(m_eventtypechoices) > 0
+		if StartsWith(m_eventtypechoices, "select ")
+			? '<td>'
+			? '<input width="100%" type="text" id="pg_event_type">'
+			? '</td>'
+		else
+			? '<td>'
+			? '<select style="width:100%" id="pg_event_type">'
+			for j=1 to alen(m_eventchoices)
+				? "<option value='" + m_eventchoices[j] + "'>" + m_eventchoices[j] + "</option>"
+			endfor
+			? "</select>"
+			? "</td>"
+		endif
+	else
+		? '<td style="Align:left;"><input type="text" id="pg_event_type"/></td>'
+	endif
+
+	text raw
+		</tr>
+		<tr>
+            <td style="Align:left;" width="120px">Title</td><td><input width="100%" type="text" id="pg_event_title"/><td>
+		</tr>
+		<tr>
+            <td style="Align:left;">Start</td><td><input width="100%" type="datetime-local" id="pg_event_start_datetime"/></td>
+		</tr>
+		<tr>
+            <td style="Align:left;">End</td><td><input width="100%" type="datetime-local" id="pg_event_end_datetime"/></td>
+		</tr>
+		<tr>
+            <td style="Align:left;">All day</td><td><input width="100%" type="checkbox" id="pg_event_allday" data-reverse data-style="btn-group-sm" /></td>
+		</tr>
+		<tr>
+            <td style="Align:left;">Repeat</td><td><input width="100%" type="checkbox" id="pg_event_repeat" data-reverse data-style="btn-group-sm"/></td>
+		</tr>
+        </table>
+    </div>
+    <div class="modal-footer">
+		<a href="#" type="button" class="btn" data-dismiss="modal">Cancel</a>
+		<a href="#" type="button" class="btn" data-dismiss="modal" onclick="pg_deleteEvent()">Delete</a>
+        <button id="pg-event-update-button" type="button" class="btn btn-success" data-dismiss="modal" onclick="pg_updateEvent()">Update</button>		
+    </div>
+	</div>
+	<script>$(':checkbox').checkboxpicker();</script>
+	endtext
+endif
+
+text raw
+<div id='calendar'>
+</div>
+<script>
+document.onselectstart = function() { return false; };
+$(document).ready(function(){
+	setTimeout(function() {
+		$('body').css('display', 'none').height();
+		$('body').css('display', 'block');
+	}, 0);
+});
+</script>
+</body>
+</html>
+endtext
+%>

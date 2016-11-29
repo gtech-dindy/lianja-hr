@@ -1,0 +1,45 @@
+################################################################
+#
+# Windows 8 (Modern) style UI theme
+#
+################################################################
+
+################################################################
+# App attributes
+#
+app.pagesectionheadertype=flat
+app.pagesectionheadericonset=white
+app.pagesectionheaderbackcolor=lightblue
+app.pagesectionheaderforecolor=white
+app.pagesectionheaderheight=34
+app.pagesectionheaderfontsize=12
+app.pagesectionheadercss=
+app.css=theme:/Modern.css
+
+################################################################
+# Page attributes
+page.headerbottomborder=false
+page.backgroundimage=
+page.backcolor=
+page.forecolor=
+page.css=
+page.gradient=false
+page.gradienttype=0
+page.gradientfromcolor=
+page.gradienttocolor=
+page.margin=
+
+################################################################
+# Section attributes
+section.backgroundimage=
+section.backcolor=
+section.forecolor=
+section.css=
+section.headergradient=false
+section.headergradienttype=0
+section.headergradientfromcolor=
+section.headergradienttocolor=
+section.gradient=false
+section.gradienttype=0
+section.gradientfromcolor=
+section.gradienttocolor=

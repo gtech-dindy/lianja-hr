@@ -1,0 +1,172 @@
+<%@ Language=Recital %>
+<html>
+<head>
+<script>
+<%
+set macros off
+%>
+<%@ include="graphs/RGraph.common.core.js" %>
+<%@ include="graphs/RGraph.common.tooltips.js" %>
+<%@ include="graphs/RGraph.common.effects.js" %>
+<%@ include="graphs/RGraph.common.key.js" %>
+<%@ include="graphs/RGraph.pie.js" %>
+</script> 
+</head>
+<%
+set macros on
+//--
+// graph_pie.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_width  = getParameter("width", "300")  
+private m_height = getParameter("height", "300") 
+private m_id     = getParameter("id", "graphCanvas") 
+private m_data   = getParameter("data", "564,155,499,611,322") 
+private m_labels = getParameter("labels", "Chris,Yvonne,Dave,Barry,Ken") 
+private m_tooltips = getParameter("tooltips", "Chris,Yvonne,Dave,Barry,Ken") 
+private m_guttertop = getParameter("guttertop", "25") 
+private m_gutterbottom = getParameter("gutterbottom", "25") 
+private m_gutterleft = getParameter("gutterleft", "60") 
+private m_gutterright = getParameter("gutterright", "90") 
+private m_shadow  = getParameter("shadow", "true") 
+private m_gradient  = getParameter("gradient", "false") 
+private m_gradientstart  = getParameter("gradientstart", "white") 
+private m_gradientend  = getParameter("gradientend", "lightblue") 
+private m_margin  = getParameter("margin", "5") 
+private m_title  = getParameter("title", "Untitled Pie Chart") 
+private m_titleforecolor  = getParameter("titleforecolor", "gray") 
+private m_titlebackcolor  = getParameter("titlebackcolor", "") 
+private m_labelsabove  = getParameter("labelsabove", "true") 
+private m_colors  = getParameter("colors", "") 
+private m_labelforecolor  = getParameter("labelforecolor", "gray") 
+private m_delegate  = getParameter("delegate", "") 
+private m_backcolor  = getParameter("backcolor", "#f7f7f7") 
+private m_effects  = getParameter("effects", "true") 
+
+// emit javascript code
+text raw
+<body style="background:&m_backcolor;overflow:hidden;">
+<style>
+.center-div
+{
+     position: relative;
+     margin: auto;
+     top: 0;
+     right: 0;
+     bottom: 0;
+     left: 0;
+     width: &m_width.px;
+     height: &m_height.px;
+}
+</style>
+<div class="center-div">
+<canvas id="&m_id" width="&m_width.px" height="&m_height.px" style="background:&m_backcolor;overflow:hidden;">[No canvas support]</canvas>
+</div>
+<script>
+    window.onload = function ()
+    {
+	    var data = [&m_data];
+	    var tooltips = [];
+	    var i;
+	    var tips = "&m_tooltips";
+	    var labels = "&m_labels";
+	    var colors = "&m_colors";
+	    var gradient = &m_gradient;
+	    var effects = &m_effects;
+	    
+	    tips = tips.split(",");
+	    for (i=0; i<tips.length; ++i) tooltips.push(tips[i]);	
+	    labels = labels.split(",");
+    	if (colors.length == 0) colors = [];
+	    else colors = colors.split(",");
+		
+        // Create the Pie chart. The arguments are the canvas ID and the data to be shown.
+        var chart = new RGraph.Pie('&m_id', data); 
+
+        // Configure the chart to look as you want.
+        chart.Set('chart.labels', labels);
+        chart.Set('chart.labels.sticks', false);
+        chart.Set('chart.labels.sticks.length', 0);
+        chart.Set('chart.linewidth', 2);
+        chart.Set('chart.strokestyle', 'white');
+        chart.Set('chart.gutter.left', &m_gutterleft);
+    	chart.Set('chart.gutter.right', &m_gutterright);
+    	chart.Set('chart.gutter.top', &m_guttertop);
+    	chart.Set('chart.gutter.bottom', &m_gutterbottom);
+    	chart.Set('chart.shadow', &m_shadow);
+	   	chart.Set('chart.hmargin', &m_margin);
+    	chart.Set('chart.title', '&m_title');
+	    chart.Set('chart.title.vpos', 0.2);
+	    chart.Set('chart.title.hpos', 0.5);
+ 	    chart.Set('chart.shadow', &m_shadow);
+	    chart.Set('chart.shadow.blur', 10);
+	    chart.Set('chart.shadow.color', 'lightgray');	
+ 	    chart.Set('chart.shadow', &m_shadow);
+	    chart.Set('chart.shadow.offsetx', 5);
+	    chart.Set('chart.shadow.offsetx', 5);
+	    chart.Set('chart.shadow.blur', 10);
+	    chart.Set('chart.shadow.color', '#fafafa');
+	    chart.Set('chart.title', '&m_title');
+	    if ('&m_titlebackcolor' != '') chart.Set('chart.title.background', '&m_titlebackcolor');
+	    chart.Set('chart.title.color', '&m_titleforecolor');
+	    chart.Set('chart.labels.sticks', false);
+ 	    chart.Set('chart.colors.sequential', true);
+	    chart.Set('chart.text.color', '&m_labelforecolor');
+	    //chart.Set("chart.highlight.style", "2d");
+    
+ 	    if (colors.length > 0)
+	    {
+		    if (gradient)
+		    {
+		    	var gcolors = [];
+		    	var k;
+		    	for (k=0; k<colors.length; ++k) gcolors.push(getGradient(chart, colors[k]));
+		    	chart.Set('chart.colors', gcolors);
+			}
+			else
+			{
+		    	chart.Set('chart.colors', colors);
+			}
+	    }
+		else if (gradient)
+		{
+		    myGradient = chart.context.createLinearGradient(0,30,250,30);
+			myGradient.addColorStop(0, '&m_gradientstart');
+			myGradient.addColorStop(1, '&m_gradientend');
+		    chart.Set('chart.colors', [myGradient]);
+	    }
+
+        // Now call the .Draw() method to draw the chart.
+		chart.Set('chart.tooltips', tooltips);
+		//chart.Set("chart.tooltips.event", "onclick");
+		if (effects) RGraph.Effects.Fade.In(chart);
+	    else chart.Draw();
+        
+		// the click_handler will get called when a bar is clicked on
+		// if this is running inside a webview then an event is dispatched back into
+		// the Lianja runtime
+		function click_handler(canvas, text, x, y, idx)
+	    {
+	        if (typeof(Lianja)=="object")
+	        {
+	        	Lianja.dispatchEvent("&m_delegate", tips[idx]);
+		    }
+	    }  
+	    chart.Set('chart.tooltips.override', click_handler); 
+	    
+	   	function getGradient(obj, color)
+	    {
+	    	var gradient = chart.context.createLinearGradient(0,0,500,50);
+		    gradient.addColorStop(0, 'white');
+	        gradient.addColorStop(1, color);
+	        return RGraph.isOld() ? color : gradient;
+	    }     
+    }
+</script>
+endtext
+%>
+</body>
+</html>
+
+

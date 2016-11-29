@@ -1,0 +1,99 @@
+<%@ Language=Recital %>
+<html>
+<head>
+<script>
+<%
+set macros off
+%>
+<%@ include="graphs/RGraph.common.core.js" %>
+<%@ include="graphs/RGraph.meter.js" %>
+</script> 
+</head>
+<%
+set macros on
+//--
+// graph_meter.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_width  = getParameter("width", "400") 
+private m_height = getParameter("height", "250") 
+private m_id     = getParameter("id", "graphCanvas") 
+private m_data = getParameter("data", "0, 10, 2")
+private m_guttertop = getParameter("guttertop", "25") 
+private m_gutterbottom = getParameter("gutterbottom", "25") 
+private m_gutterleft = getParameter("gutterleft", "25") 
+private m_gutterright = getParameter("gutterright", "25") 
+private m_shadow  = getParameter("shadow", "true") 
+private m_title  = getParameter("title", "Untitled Meter Chart") 
+private m_titleleft  = getParameter("titleleft", "2010") 
+private m_titleright  = getParameter("titleright", "2011") 
+private m_titleforecolor  = getParameter("titleforecolor", "gray") 
+private m_titlebackcolor  = getParameter("titlebackcolor", "") 
+private m_labelsabove  = getParameter("labelsabove", "true") 
+private m_margin  = getParameter("margin", "5") 
+private m_colors  = getParameter("colors", "'#fff', '#eef', '#ddf', '#ccf', '#bbf', '#bbf', '#aaf', '#99f'") 
+private m_labelforecolor  = getParameter("labelforecolor", "gray") 
+private m_backcolor  = getParameter("backcolor", "#f7f7f7") 
+
+// emit javascript code
+text raw
+<body style="background:&m_backcolor;overflow:hidden;">
+<style>
+.center-div
+{
+     position: relative;
+     margin: auto;
+     top: 0;
+     right: 0;
+     bottom: 0;
+     left: 0;
+     width: &m_width.px;
+     height: &m_height.px;
+}
+</style>
+<div class="center-div">
+<canvas id="&m_id" width="&m_width.px" height="&m_height.px" style="background:&m_backcolor;overflow:hidden;">[No canvas support]</canvas>
+</div>
+<script>
+    window.onload = function ()
+    {
+        // Create the Meter chart. The arguments are the canvas ID, the minimum, the maximum and the value.
+        var chart = new RGraph.Meter('&m_id', &m_data);
+        
+        // Configure the Meter chart to appear as you want.
+        chart.Set('chart.annotatable', false);
+        chart.Set('chart.label.position', 'inside');
+        chart.Set('chart.units.post', 'k');
+ 	    chart.Set('chart.gutter.left', &m_gutterleft);
+	    chart.Set('chart.gutter.right', &m_gutterright);
+	    chart.Set('chart.gutter.top', &m_guttertop);
+	    chart.Set('chart.gutter.bottom', &m_gutterbottom);
+	
+		chart.Set('chart.red.start', 7);
+		chart.Set('chart.red.end', 10);
+		chart.Set('chart.yellow.start', 4);
+		chart.Set('chart.yellow.end', 7);
+		chart.Set('chart.green.start', 0);
+		chart.Set('chart.green.end', 4); 
+
+	    chart.Set('chart.shadow', &m_shadow);
+	    chart.Set('chart.shadow.blur', 10);
+	    chart.Set('chart.shadow.color', 'lightgray');
+	
+	    chart.Set('chart.title', '&m_title');
+        chart.Set('chart.title.vpos', 0.4);
+	    if ('&m_titlebackcolor' != '') chart.Set('chart.title.background', '&m_titlebackcolor');
+	    chart.Set('chart.title.color', '&m_titleforecolor');
+  	    chart.Set('chart.text.color', '&m_labelforecolor');
+	       
+        // Now call the .Draw() method to draw the chart.
+        chart.Draw();
+    }
+</script>
+endtext
+%>
+</body>
+</html>
+
+

@@ -1,0 +1,82 @@
+<%@ Language=VFP %>
+<%
+//--
+// smarteditor.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_file  = getParameter("file", "") 
+//--
+private m_libpath = libPath()
+private m_language = "javascript"
+private m_theme = "dreamweaver"
+text raw
+<html>
+<head>
+	<meta content="text/html; charset=utf-8" http-equiv="content-type" />
+	<script src="&m_libpath/smarteditor/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+	<script src="&m_libpath/smarteditor/src-min-noconflict/ext-language_tools.js"></script>
+	<style type="text/css">
+		body { 
+			margin: 0px ;
+			padding : 0px ;
+			height : 100% !important;
+			overflow-y: none;
+		}
+		#editor { 
+			position:absolute;
+			top:0px;
+			bottom:0px;
+			left:0px;
+			right:0px;
+		}
+	</style>
+    <script type="text/javascript">
+		var m_dirty = false;
+		//--------------------------------------------------------------------------------
+        function lianja_getEditorData()
+        {
+        	return editor.getValue();
+	    }
+		//--------------------------------------------------------------------------------
+       	function lianja_setEditorData(text)
+        {
+			editor.setValue(text);
+			m_dirty = false;
+	    }
+		//--------------------------------------------------------------------------------
+		function lianja_editorGotoLine(lineNumber)
+		{
+			editor.gotoLine(lineNumber);
+		}
+		//--------------------------------------------------------------------------------
+		function lianja_editorIsDirty()
+		{
+			return m_dirty;
+		}
+    </script>
+</head>
+
+<body>
+	<div id="editor">some text</div>
+    <script>
+		ace.require("ace/ext/language_tools");
+        var editor = ace.edit("editor");
+		editor.setTheme("ace/theme/&m_theme");
+		editor.setOptions({
+			enableBasicAutocompletion: true,
+			enableSnippets: true,
+			enableLiveAutocompletion: true
+		});
+		editor.getSession().setMode("ace/mode/&m_language");
+		document.getElementById('editor').style.fontSize='14px';
+		editor.setShowPrintMargin(false);
+		editor.getSession().on('change', function(e) {
+			m_dirty = true;
+		});
+		</script>	
+</body>
+</html>
+endtext
+%>
+

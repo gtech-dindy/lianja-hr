@@ -1,0 +1,211 @@
+<%@ Language=VFP %>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="description" content="Lianja App Center" />
+<meta name="author" content="Lianja Inc." />
+<meta name="copyright" content="2016, Lianja Inc." />
+<meta name="apple-mobile-web-app-capable" content="yes" /> 
+<base href="cloudserver:/appcenter/" target="_blank">
+
+<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="css/droptiles.css?v=24">
+
+<style>
+#mainbody {
+    overflow: hidden;
+    overflow-x: auto;
+    ms-overflow-x: auto;
+    /*width: 100%;*/
+    min-height: 100%;
+    overflow-y: hidden;
+    ms-overflow-y: hidden;
+    background-image: none !important;
+	background-color: #363636 !important;
+}
+
+#body {
+    overflow: hidden;
+    overflow-x: auto;
+    ms-overflow-x: auto;
+    /*width: 100%;*/
+    min-height: 100%;
+    overflow-y: hidden;
+    ms-overflow-y: hidden;
+}
+#sectiontitle {
+    font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+    font-size: 24px;
+    color: white;  
+    font-smooth: always;
+    text-shadow: 0 0 1px rgba(255,255,255,0.3);
+}
+</style>
+
+<script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="js/lianja.js"></script>
+<script>window.lianjardp = true;</script>              
+</head>
+
+<body id="mainbody" onresize="lianja_resize();">
+    <div id="body" class="unselectable" style="cursor:default !important;">
+        <div id="navbar" class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container-fluid" style="border-bottom: 1px solid orange;">
+                    <div class="pull-left" style="margin-top: 7px; margin-right: 5px;">
+                        <img src="img/elephant_icon32.png" style="max-height: 48px;" />
+                    </div><h1><a class="brand">Lianja</a></h1>
+                    <div class="nav-collapse">
+                        <ul class="nav">
+                            <li><a class="active" href="javascript:lianja_navigate('cloudserver:/appcenter/appcenter.rsp');"><i class="icon-th-large"></i>Dashboard</a></li>
+							<%
+							if not Lianja.isKioskMode() and not Lianja.isRuntimeMode()
+								text raw
+									<li><a href="javascript:lianja_navigate('cloudserver:/appcenter/appcenterdoc.rsp');"><i class="icon-book"></i>Documentation</a></li>
+								endtext
+							endif
+							%>
+                        </ul>
+                        <ul class="nav pull-right">
+                           <li><a href="javascript:lianja_editprofilesettings();"><i class="icon-camera"></i>Avatar</a></li>
+                             <li><a href="javascript:lianja_navigate('cloudserver:/appcenter/appcenter_rdp.rsp?logout=true');"><i class="icon-refresh"></i>Reset</a></li>
+                            <li><a href="javascript:lianja_logout();"><i class="icon-user"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="content" style="visibility: hidden">
+<%
+if not Lianja.isRuntimeMode()
+	text raw
+            <div id="start">Lianja App Builder</div>
+	endtext
+else
+	? '<div id="start">' + Lianja.runtimeCaption() + ' App Center</div>'
+endif
+if not Lianja.isKioskMode()
+	text raw
+           <div id="user" data-bind="with: user" onclick="javascript:lianja_editprofilesettings();">
+                <div id="name">
+                    <div id="firstname" data-bind="text: firstName">Guest</div>
+                    <div id="lastname" data-bind="text: lastName"></div>
+                </div>
+                <div id="photo">
+                    <img src="img/User No-Frame.png" data-bind="attr: {src: photo}" width="40" height="40" />
+                </div>
+            </div>
+	endtext
+endif
+%>
+            <div id="browser_incompatible" class="alert">
+                <button class="close" data-dismiss="alert">×</button>
+                <strong>Warning!</strong>
+                Your browser is incompatible with Lianja. Please use Internet Explorer 9+, Chrome, Firefox or Safari.
+            </div>
+            <div id="CombinedScriptAlert" class="alert">
+                <button class="close" data-dismiss="alert">×</button>
+                <strong>Warning!</strong>
+                Combined javascript files are outdated. 
+                Please rerun the js\Combine.bat file. 
+                Otherwise it won't work when you will deploy on a server.
+            </div>
+
+		 <div id="metro-sections-container" class="metro">
+                <div id="trash" class="trashcan">
+                    <img src="img/Trashcan.png" width="64" height="64" />
+                </div>
+                <div class="metro-sections" data-bind="foreach: sections">                   
+                    <div class="metro-section" data-bind="attr: {id : uniqueId}">
+                        <div class="metro-section-title" data-bind="{text: name}"></div>
+                        <!-- ko foreach: sortedTiles -->
+                            <div data-bind="attr: { id: uniqueId, 'class': tileClasses, 'style' : tileStyle }">
+                                <b class="check"></b>
+                                <!-- ko if: tileImage -->
+                                <div class="tile-image">
+                                    <img data-bind="attr: { src: tileImage }" src="img/Internet%20Explorer.png" />
+                                </div>
+                                <!-- /ko -->
+                                <!-- ko if: iconSrc -->
+                                <!-- ko if: slides().length == 0 -->
+                                <div data-bind="attr: { 'class': iconClasses }">
+                                    <img data-bind="attr: { src: iconSrc }" src="img/Internet%20Explorer.png" />
+                                </div>
+                                <!-- /ko -->
+                                <!-- /ko -->
+                                <div data-bind="foreach: slides">
+                                    <div class="tile-content-main">
+                                        <div data-bind="html: $data">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- ko if: label -->
+                                <span class="tile-label" data-bind="text: label">Label</span>
+                                <!-- /ko -->
+                                <!-- ko if: counter -->
+                                <span class="tile-counter" data-bind="html: counter">10</span>
+                                <!-- /ko -->
+                                <!-- ko if: subContent -->
+                                <div data-bind="attr: { 'class': subContentClasses }, html: subContent">
+                                    subContent
+                                </div>
+                                <!-- /ko -->
+                            </div>
+                        <!-- /ko -->
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div id="copyrightleft">            
+            Lianja&nbsp;&copy;&nbsp;<%= Lianja.version() %>
+        </div>
+        <div id="copyright">            
+            Copyright &copy; 2016 Lianja Inc. All Rights Reserved Worldwide.
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript" src="js/combined.js?v=24"></script>
+    
+<script type="text/javascript">
+    // Bootstrap initialization
+    $(document).ready(function () {
+        $('.dropdown-toggle').dropdown();
+	   /*lianja_resize();*/
+    });
+</script>
+        
+<script type="text/javascript">
+    /* need to get the name of the current user from a cookie */
+    lianja_getuser();
+</script>
+
+<script type="text/javascript" src="js/combineddashboard.js?v=24"></script>
+
+<script type="text/javascript">
+
+<%@ include="appcentertiles.prg" %>
+
+</script>
+
+<%
+if m_app_count = 0
+	? '<div style="text-align:center;position:absolute; top:45%;left:30%;right:30%;zindex:100;background-color:#acacac;color:white;padding:15px;border:1px solid white;">'
+	? '<p><img src="img/info-icon.png" style="position:absolute;left:0px;top:0px;"/>Sorry but you have no published Apps available to you.</br>You must first of all deploy your Apps using the Lianja App Builder "Deploy" workspace.</p>'
+	? '</div>'
+else
+	? '<script type="text/javascript" src="js/dashboard.js?v=24"></script>'
+endif
+%>
+
+<script type="text/javascript">
+window.ondragstart = function() { return false; };
+</script>
+
+</html>

@@ -1,0 +1,158 @@
+<%@ Language=Recital %>
+<html>
+<head>
+<script>
+<%
+set macros off
+%>
+<%@ include="graphs/RGraph.common.core.js" %>
+<%@ include="graphs/RGraph.common.tooltips.js" %>
+<%@ include="graphs/RGraph.common.effects.js" %>
+<%@ include="graphs/RGraph.common.key.js" %>
+<%@ include="graphs/RGraph.gantt.js" %>
+</script> 
+</head>
+<body>
+<%
+set macros on
+//--
+// graph_gant.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_width  = getParameter("width", "760") 
+private m_height = getParameter("height", "300") 
+private m_id     = getParameter("id", "graphCanvas") 
+// format of the data is a javscript array list e.g.
+// [31, 28, null, 'Richard'], [31, 28, null, 'Fred'] ...
+//
+// [0] = start value
+// [1] = size value
+// [2] = completed value (if not null will display perentage completed after the bar)
+// [3] = label
+private m_data = getParameter("data", ";
+								 [31, 28, 50, 'Richard'],;
+                                 [31, 28, 10, 'Fred'],;
+                                 [59, 14, 20, 'Barney'],;
+                                 [59, 21, 100, 'Gloria'],;
+                                 [59, 31, 1, 'Paul'],;
+                                 [80, 21, 23, 'Harry'],;
+                                 [94, 7, 27, 'Shane'],;
+                                 [120, 14, 23, 'Barry'],;
+                                 [130, 14, 0, 'Cynthia'],;
+                                 [211, 61, 56, 'Graham'],;
+                                 [334, 31, 19, 'Paul']") 
+private m_labels = getParameter("labels", "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec") 
+private m_tooltips = getParameter("tooltips", "Richard,Fred,Narney,Gloria,Paul,Harry,Shane,Barry,Cynthia,Graham,Paul") 
+private m_guttertop = getParameter("guttertop", "40") 
+private m_gutterbottom = getParameter("gutterbottom", "25") 
+private m_gutterleft = getParameter("gutterleft", "50") 
+private m_gutterright = getParameter("gutterright", "40") 
+private m_shadow  = getParameter("shadow", "true") 
+private m_title  = getParameter("title", "Untitled Gantt Chart") 
+private m_titleforecolor  = getParameter("titleforecolor", "gray") 
+private m_titlebackcolor  = getParameter("titlebackcolor", "") 
+private m_labelsabove  = getParameter("labelsabove", "true") 
+private m_margin  = getParameter("margin", "2") 
+private m_labelforecolor  = getParameter("labelforecolor", "gray") 
+private m_barcolor  = getParameter("colors", "lightblue") 
+private m_borders  = getParameter("borders", "false") 
+private m_max  = getParameter("max", "365") 
+private m_delegate  = getParameter("delegate", "") 
+private m_backcolor  = getParameter("backcolor", "#f7f7f7") 
+private m_effects  = getParameter("effects", "true") 
+
+// emit javascript code
+text raw
+<body style="background:&m_backcolor;overflow:hidden;">
+<style>
+.center-div
+{
+     position: relative;
+     margin: auto;
+     top: 0;
+     right: 0;
+     bottom: 0;
+     left: 0;
+     width: &m_width.px;
+     height: &m_height.px;
+}
+</style>
+<div class="center-div">
+<canvas id="&m_id" width="&m_width.px" height="&m_height.px" style="background:&m_backcolor;overflow:hidden;">[No canvas support]</canvas>
+</div>
+<script>
+    window.onload = function ()
+    {
+ 	    var data = [&m_data];
+	    var tooltips = [];
+	    var i;
+	    var tips = "&m_tooltips";
+	    var labels = "&m_labels";
+	    var effects = &m_effects;
+	    
+	    if (tips.indexOf("'") < 0) tips = tips.split(",");
+		else tips = [ &m_tooltips ];
+	    for (i=0; i<tips.length; ++i) tooltips.push(tips[i]);
+	
+	    if (labels.indexOf("'") < 0) labels = labels.split(",");
+		else labels = [ &m_labels ];
+
+        // Create the Gantt chart. Note that unlike other RGraph charts the actual data is NOT
+        // given as part of the constructor.
+        var chart = new RGraph.Gantt('&m_id');
+        
+ 	    if ('&m_titlebackcolor' != '') chart.Set('chart.title.background', '&m_titlebackcolor');
+	    chart.Set('chart.title.color', '&m_titleforecolor');		
+ 	    chart.Set('chart.text.color', '&m_labelforecolor');
+ 	    chart.Set('chart.borders', &m_borders);
+ 	    chart.Set('chart.margin', &m_margin);
+       
+        // Configure the chart to appear as you want.
+        chart.Set('chart.xmax', &m_max);
+       	chart.Set('chart.gutter.left', &m_gutterleft);
+    	chart.Set('chart.gutter.right', &m_gutterright);
+    	chart.Set('chart.gutter.top', &m_guttertop);
+    	chart.Set('chart.gutter.bottom', &m_gutterbottom);
+        chart.Set('chart.labels', labels);
+        if ('&m_title' != '') chart.Set('chart.title', '&m_title');
+        chart.Set('chart.defaultcolor', '&m_barcolor');
+        
+        // This is where the events that appear on the Gantt chart are given. You can read about the
+        // format below.
+        chart.Set('chart.events', [ &m_data ]);
+        
+        // set the colors of the vertical bars of the gantt chart
+        chart.Set('chart.vbars', [
+                                  [0, 31, 'rgba(232,232,232,0.5)'],
+                                  [59, 31, 'rgba(232,232,232,0.5)'],
+                                  [120, 31, 'rgba(232,232,232,0.5)'],
+                                  [181, 31, 'rgba(232,232,232,0.5)'],
+                                  [243, 30, 'rgba(232,232,232,0.5)'],
+                                  [304, 30, 'rgba(232,232,232,0.5)']
+                                 ]);
+
+        // Now call the .Draw() method to draw the chart.
+		chart.Set('chart.tooltips', tooltips);
+		if (effects) RGraph.Effects.Fade.In(chart);
+	    else chart.Draw();
+        
+		// the click_handler will get called when a bar is clicked on
+		// if this is running inside a webview then an event is dispatched back into
+		// the Lianja runtime
+		function click_handler(canvas, text, x, y, idx)
+	    {
+	        if (typeof(Lianja)=="object")
+	        {
+	        	Lianja.dispatchEvent("&m_delegate", tips[idx]);
+		    }
+	    }  
+	    chart.Set('chart.tooltips.override', click_handler);        
+    }
+</script>
+endtext
+%>
+</body>
+</html>
+
+

@@ -1,0 +1,151 @@
+<%@ Language=Recital %>
+<html>
+<head>
+<script>
+<%
+set macros off
+%>
+<%@ include="graphs/RGraph.common.core.js" %>
+<%@ include="graphs/RGraph.common.tooltips.js" %>
+<%@ include="graphs/RGraph.common.effects.js" %>
+<%@ include="graphs/RGraph.common.key.js" %>
+<%@ include="graphs/RGraph.line.js" %>
+</script> 
+</head>
+<%
+set macros on
+//--
+// graph_line.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_width  = getParameter("width", "760") 
+private m_height = getParameter("height", "250") 
+private m_id     = getParameter("id", "graphCanvas") 
+private m_data = getParameter("data", "10,4,17,50,25,19,20,25,30,29,30,29|;
+									   4,17,50,25,19,20,25,30,29,30,29,45|;
+									   50,25,19,20,25,30,29,30,29,10,4,17") 
+private m_labels = getParameter("labels", "") 
+private m_keylabels = getParameter("keylabels", "2009,2010,2011") 
+private m_guttertop = getParameter("guttertop", "25") 
+private m_gutterbottom = getParameter("gutterbottom", "25") 
+private m_gutterleft = getParameter("gutterleft", "50") 
+private m_gutterright = getParameter("gutterright", "60") 
+private m_shadow  = getParameter("shadow", "true") 
+private m_title  = getParameter("title", "Untitled Line Chart") 
+private m_titleforecolor  = getParameter("titleforecolor", "gray") 
+private m_titlebackcolor  = getParameter("titlebackcolor", "") 
+private m_labelsabove  = getParameter("labelsabove", "true") 
+private m_margin  = getParameter("margin", "5") 
+private m_colors  = getParameter("colors", "lightblue,lightgreen,red,yellow") 
+private m_labelforecolor  = getParameter("labelforecolor", "gray") 
+private m_backcolor  = getParameter("backcolor", "#f7f7f7") 
+private m_effects  = getParameter("effects", "true") 
+private m_targetui  = getParameter("targetui", "web") 
+
+if len(m_labels)=0 and m_targetui = "phone"
+	m_labels = "J,F,M,A,M,J,J,A,S,O,N,D"
+else
+	m_labels = "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec"
+endif
+
+// emit javascript code
+text raw
+<body style="background:&m_backcolor;overflow:hidden;">
+<style>
+.center-div
+{
+     position: relative;
+     margin: auto;
+     top: 0;
+     right: 0;
+     bottom: 0;
+     left: 0;
+     width: &m_width.px;
+     height: &m_height.px;
+}
+</style>
+<div class="center-div">
+<canvas id="&m_id" width="&m_width.px" height="&m_height.px" style="background:&m_backcolor;overflow:hidden;">[No canvas support]</canvas>
+</div>
+<script>
+    window.onload = function ()
+    {
+	    var data = "&m_data";
+	    var keylabels = "&m_keylabels";
+	    var datasets = [];
+	    var labels = "&m_labels";
+	    var colors = "&m_colors";
+		var i;
+		var effects = &m_effects;
+			   
+ 		if (data.indexOf("|") > 0)
+		{
+			datasets = data.split("|");
+			for (i=0; i<datasets.length; ++i)
+			{
+				datasets[i] = datasets[i].split(",");
+			}
+		}
+		else
+		{
+			data = [ &m_data ];
+		}
+		
+	    labels = labels.split(",");
+    	colors = colors.split(",");
+    	keylabels = keylabels.split(",");
+    
+        // Create the Line chart object. The arguments are the canvas ID and the data array.
+        var chart;
+        
+        if (datasets.length > 0)
+        {
+       		chart = new RGraph.Line("&m_id", datasets);
+			//chart.Set('chart.key.position', 'gutter');
+			chart.Set('chart.key.position.x', chart.canvas.width - &m_gutterright + 5);
+            chart.Set('chart.key.position.y', &m_guttertop);
+            chart.Set('chart.key.linewidth', 0.005);
+            chart.Set('chart.key.background', 'rgba(0,0,0,0)');
+            chart.Set('chart.key.colors', colors);
+            chart.Set('chart.key', keylabels);
+        }
+		else
+		{
+	        chart = new RGraph.Line("&m_id", data);
+		}
+        
+        // The way to specify multiple lines is by giving multiple arrays, like this:
+        // var line = new RGraph.Line("myLine", [4,6,8], [8,4,6], [4,5,3]);
+        
+        // Configure the chart to appear as you wish.
+        chart.Set('chart.background.barcolor1', 'white');
+        chart.Set('chart.background.barcolor2', 'white');
+        chart.Set('chart.background.grid.color', 'rgba(238,238,238,1)');
+        chart.Set('chart.colors', colors);
+        chart.Set('chart.linewidth', 2);
+	   	chart.Set('chart.axis.color', 'gray');
+        chart.Set('chart.filled', false);
+        chart.Set('chart.hmargin', &m_margin);
+        chart.Set('chart.labels', labels);
+       	chart.Set('chart.gutter.left', &m_gutterleft);
+    	chart.Set('chart.gutter.right', &m_gutterright);
+    	chart.Set('chart.gutter.top', &m_guttertop);
+    	chart.Set('chart.gutter.bottom', &m_gutterbottom);
+    	chart.Set('chart.shadow', &m_shadow);      
+ 	    chart.Set('chart.title', '&m_title');
+	    if ('&m_titlebackcolor' != '') chart.Set('chart.title.background', '&m_titlebackcolor');
+	    chart.Set('chart.title.color', '&m_titleforecolor');		
+ 	    chart.Set('chart.text.color', '&m_labelforecolor');
+	 	chart.Set('chart.tickmarks', 'circle');
+		 
+		if (effects) RGraph.Effects.Fade.In(chart);
+	    else chart.Draw();
+    }
+</script>
+endtext
+%>
+</body>
+</html>
+
+

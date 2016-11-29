@@ -1,0 +1,45 @@
+################################################################
+#
+# iOS style UI theme
+#
+################################################################
+
+################################################################
+# App attributes
+#
+app.pagesectionheadertype=gradient
+app.pagesectionheadericonset=black
+app.pagesectionheaderbackcolor=
+app.pagesectionheaderforecolor=darkgray
+app.pagesectionheaderheight=34
+app.pagesectionheaderfontsize=12
+app.pagesectionheadercss=
+app.css=theme:/iOS.css
+
+################################################################
+# Page attributes
+page.headerbottomborder=false
+page.backgroundimage=
+page.backcolor=
+page.forecolor=
+page.css=
+page.gradient=false
+page.gradienttype=0
+page.gradientfromcolor=
+page.gradienttocolor=
+page.margin=
+
+################################################################
+# Section attributes
+section.backgroundimage=
+section.backcolor=
+section.forecolor=
+section.css=
+section.headergradient=true
+section.headergradienttype=1
+section.headergradientfromcolor=#fafafa
+section.headergradienttocolor=#d6d6d6
+section.gradient=false
+section.gradienttype=0
+section.gradientfromcolor=
+section.gradienttocolor=

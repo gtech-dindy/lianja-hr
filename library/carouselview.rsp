@@ -1,0 +1,305 @@
+<%@ Language=VFP %>
+<html>
+<head>
+<%
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+set macros on
+set fixed on 
+private m_libpath = libPath()
+? '<link rel="stylesheet" href="&m_libpath/bootstrap-3.3.4/css/bootstrap.min.css">'
+? '<script src="&m_libpath/jquery-1.10.2/jquery-1.10.2.min.js" type="text/javascript"></script>'
+? '<script src="&m_libpath/bootstrap-3.3.4/js/bootstrap.min.js" type="text/javascript"></script>'
+text raw
+<script>
+if (typeof LianjaAppBuilder === 'undefined')
+{
+	window.LianjaAppBuilder = window.parent.LianjaAppBuilder;
+}
+</script>
+endtext
+%>
+</head>
+<body>
+<%
+proc emitMenuItem(menuitem, menupath)
+	private amenuitems
+	private amenuitemlen
+	private submenu
+	private menupad
+	private menudelegate
+	private i
+	private mpath
+	private delegate = [javascript:dispatchDelegate('{1}')]
+	if "(" $ menuitem and endsWith(menuitem, ")")
+		submenuitems = substr(menuitem, indexOf(menuitem, "(")+1, len(menuitem)-1)
+		submenuitems = substr(submenuitems, 2, len(submenuitems)-2)
+		menupad = substr(menuitem, 1, indexOf(menuitem, "("))
+		amenuitems = explode(",", submenuitems)
+		amenuitemlen = alen(amenuitems)
+		text raw
+			<li class="dropdown">
+			<a href="#" class="dropdown-toggle" data-toggle="dropdown">&menupad<b class="caret"></b></a>
+			<ul class="dropdown-menu" role="menu">
+		endtext
+		for i=1 to amenuitemlen
+			menuitem = amenuitems[i]
+			if len(menupath)=0
+				mpath = menupad
+			else
+				mpath = menupath+"|"+menupad
+			endif
+			emitMenuItem(menuitem, mpath)
+		endfor
+		text raw
+			</ul>
+			</li>
+		endtext
+	else
+		if menuitem = "-"
+			text raw
+		        <li class="divider"></li>
+			endtext
+		else
+			if len(menupath)=0
+				mpath = menuitem
+			else
+				mpath = menupath+"|"+menuitem
+			endif
+			menudelegate = str_replace("{1}", lower(mpath), delegate)
+			text raw
+		        <li>
+		        	<a href="&menudelegate">&menuitem</a>
+			    </li>
+			endtext
+		endif
+	endif
+endproc
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+set macros on
+set fixed on 
+//--
+// carouselview.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private panels  	= getParameter("panels", "img_chania.jpg,img_chania2.jpg,img_flower.jpg,img_flower2.jpg") 
+private captions  	= getParameter("captions", "Chania,Chania,Flowers,Flowers") 
+private subcaptions	= getParameter("subcaptions", "The atmosphere in Chania has a touch of Florence and Venice.|The atmosphere in Chania has a touch of Florence and Venice.|Beautiful flowers in Kolymbari, Crete.|Beautiful flowers in Kolymbari, Crete.") 
+private interval 	= getParameter("interval", "0")
+private menu     	= base64_decode(getParameter("menu", ""))   
+private delegate 	= getParameter("delegate", "")   
+private showcontrols = getParameter("showcontrols", "true")   
+private showindicators = getParameter("showindicators", "true")   
+private apanels
+private m_panels = 0
+
+if len(panels) > 0 
+	apanels = explode(",", panels)
+	m_panels = alen(apanels)
+endif
+private acaptions
+private m_captions = 0
+if len(captions) > 0 
+	if '|' $ captions
+		acaptions = explode("|", captions)
+	else
+		acaptions = explode(",", captions)
+	endif
+	m_captions = alen(acaptions)
+endif
+private asubcaptions
+private m_subcaptions = 0
+if len(subcaptions) > 0
+	if '|' $ subcaptions
+		asubcaptions = explode("|", subcaptions)
+	else
+		asubcaptions = explode(",", subcaptions)
+	endif
+	m_subcaptions = alen(asubcaptions)
+	endif
+private m_active
+if "&interval" = "0"
+	interval = "false"
+else
+	interval = int(val(interval))*1000
+endif
+
+text raw
+<script>
+function dispatchDelegate(menupath)
+{
+	if ("&delegate" == "") return;
+
+	try
+	{
+		if (Lianja.isDevMode())
+		{
+			var result = Lianja.evaluate("javascript:&delegate('" + menupath + "');");
+			if (typeof result === 'string' && result == 'error: undefined function')
+			{
+				throw "error";
+			}
+		}
+		else
+		{
+			eval("window.parent.parent.&delegate('" + menupath + "')");
+		}
+	}
+	catch (e)
+	{
+		Lianja.evaluate("&delegate('" + menupath + "')");
+	}
+};
+</script>
+endtext
+
+if len(menu)>0
+	private amenu
+	private i
+	private amenulen
+	private menuitem
+	private menudelegate
+	private menupath
+	if "|" $ menu
+		amenu = explode("|", menu)
+	else
+		amenu = explode(",", menu)
+	endif
+	amenulen = alen(amenu)
+	if len(delegate) > 0
+		delegate = "javascript:dispatchDelegate('{1}')"
+	else
+		delegate = "javascript:void(0)"
+	endif
+	text raw
+		<nav class="navbar navbar-inverse" style="z-index:1000;border-radius:0px !important;">
+		<div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+	endtext
+	for i=1 to amenulen
+		menuitem = amenu[i]
+		menudelegate = str_replace("{1}", lower(menuitem), delegate)
+		if i = 1
+			text raw
+		        <li class="active">
+		        	<a href="&menudelegate">&menuitem<span class="sr-only">(current)</span></a>
+			    </li>
+			endtext
+		else
+			if startsWith(menuitem, ">")
+				menuitem = substr(menuitem, 2)
+				menudelegate = str_replace("{1}", lower(menuitem), delegate)
+				text raw
+     				</ul>
+					<ul class="nav navbar-nav navbar-right">
+        				<li>
+        					<a href="&menudelegate">&menuitem</a>
+    					</li>
+      				</ul>
+     			endtext
+			else
+				emitMenuItem(menuitem, "")
+			endif
+		endif
+	endfor
+	text raw
+			  </ul>
+		    </div><!-- /.navbar-collapse -->
+		  </div><!-- /.container-fluid -->
+		  </nav>
+	endtext	
+	? [<div id="myCarousel" class="carousel slide" data-ride="carousel" style="position:absolute;width:100%;bottom:0px;top:52px;" data-interval="&interval">]
+else
+? [<div id="myCarousel" class="carousel slide" data-ride="carousel" style="width:100%;height:100%;" data-interval="&interval">]
+endif
+
+if showindicators = "true"
+	  ? '<ol class="carousel-indicators">'
+	  for i=0 to m_panels-1
+	  	if i = 0
+	  		m_active = "active"
+	  	else
+			m_active = ""
+		endif
+	    ? '<li data-target="#myCarousel" data-slide-to="&i" class="&m_active"></li>'
+	  endfor
+	  ? '</ol>'
+endif
+	
+%>
+
+  <!-- Wrapper for slides -->
+  <div class="carousel-inner" role="listbox">
+  <%
+  for i=1 to m_panels
+  	if i = 1
+	  	m_active = "active"
+	else
+		m_active = ""
+	endif
+    ? '<div class="item &m_active" style="width:100%;height:100%;">'
+    if '.rsp' $ apanels[i] or '.jssp' $ apanels[i] 
+		? "<iframe id='panel" + alltrim(etos(i)) + "' width='100%' height='100%' frameborder='0' scrolling='no' src='" + apanels[i] + "'></iframe>"
+    else
+		base64_encode_file(apanels[i], "jpg", "", "", "style='width:100%;height:100%;'")
+	endif
+    if m_captions >= i
+    	? '<div class="carousel-caption">'
+    	? '<h3>' + acaptions[i] + '</h3>'
+    	if m_subcaptions >= i
+    		? '<p>' + asubcaptions[i] + '</p>'
+		endif
+    	? '</div>'
+	endif
+    ? '</div>'
+  endfor
+  ? '</div>'
+  if showcontrols = "true"
+  	text raw
+	  <!-- Left and right controls -->
+	  <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+	    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+	    <span class="sr-only">Previous</span>
+	  </a>
+	  <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+	    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+	    <span class="sr-only">Next</span>
+	  </a>
+	endtext
+  endif
+  %>
+</div>
+<script>
+$(document).ready(function(){
+    $('.carousel').carousel();
+});
+document.onselectstart = function() { return false; };
+function doMethod(cmd)
+{
+	if (cmd == "next" || cmd == "prev" || cmd == "cycle")
+	{
+		;
+	}
+	else
+	{
+		var y = parseInt(cmd);
+		if (!isNaN(y)) 
+		{
+			cmd = y-1;
+		}
+	}
+	$(".carousel").carousel(cmd);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,514 @@
+<%@ Language=Recital %>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="description" content="Lianja App Builder Documentation" />
+<meta name="author" content="Lianja Inc." />
+<meta name="copyright" content="2016, Lianja Inc." />
+<meta name="apple-mobile-web-app-capable" content="yes" /> 
+
+<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+<!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+
+<style>
+#mainbody {
+    overflow: hidden;
+    overflow-x: auto;
+    ms-overflow-x: auto;
+    width: 100%;
+    min-height: 100%;
+    overflow-y: hidden;
+    ms-overflow-y: hidden;
+}
+
+#body {
+    overflow: hidden;
+    overflow-x: auto;
+    ms-overflow-x: auto;
+    width: 100%;
+    min-height: 100%;
+    overflow-y: hidden;
+    ms-overflow-y: hidden;
+}
+#sectiontitle {
+    font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+    font-size: 24px;
+    color: white;  
+    font-smooth: always;
+    text-shadow: 0 0 1px rgba(255,255,255,0.3);
+}
+</style>
+
+<script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="css/droptiles.css?v=24">
+<script type="text/javascript" src="js/lianja.js"></script>
+              
+</head>
+
+<body id="mainbody" onresize="lianja_resize();" oncontextmenu='return false;'>
+    <div id="body" class="unselectable" style="cursor:default !important;">
+        <div id="navbar" class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container-fluid" style="border-bottom: 1px solid orange;">
+                    <a class="pull-left" style="margin-top: 7px; margin-right: 5px;" href="">
+                        <img src="img/elephant_icon32.png" style="max-height: 48px;" />
+                    </a><h1><a class="brand" href="javascript:lianja_showDocument('http://www.lianja.com');">Lianja</a></h1>
+                    <div class="nav-collapse">
+                        <ul class="nav">
+                            <li><a class="active" href="javascript:lianja_navigate('cloudserver:/appcenter/appcenter.rsp');"><i class="icon-th-large"></i>Dashboard</a></li>
+<li><a href="javascript:lianja_navigate('cloudserver:/appcenter/appcenterdoc.rsp');"><i class="icon-book"></i>Documentation</a></li>
+                        </ul>
+                        <ul class="nav pull-right">
+                           <li><a href="javascript:lianja_editprofilesettings();"><i class="icon-camera"></i>Avatar</a></li>
+                            <li><a href="javascript:lianja_navigate('cloudserver:/appcenter/appcenter.rsp?logout=true');"><i class="icon-refresh"></i>Reset</a></li>
+                            <li><a href="javascript:lianja_logout();"><i class="icon-user"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="content" style="visibility: hidden">
+            <div id="start">Lianja App Builder Documentation</div>
+            <div id="user" data-bind="with: user" onclick="javascript:lianja_editprofilesettings();">
+                <div id="name">
+                    <div id="firstname" data-bind="text: firstName">Guest</div>
+                    <div id="lastname" data-bind="text: lastName"></div>
+                </div>
+                <div id="photo">
+                    <img src="img/User No-Frame.png" data-bind="attr: {src: photo}" width="40" height="40" />
+                </div>
+            </div>
+            <div id="browser_incompatible" class="alert">
+                <button class="close" data-dismiss="alert">×</button>
+                <strong>Warning!</strong>
+                Your browser is incompatible with Lianja. Please use Internet Explorer 9+, Chrome, Firefox or Safari.
+            </div>
+            <div id="CombinedScriptAlert" class="alert">
+                <button class="close" data-dismiss="alert">×</button>
+                <strong>Warning!</strong>
+                Combined javascript files are outdated. 
+                Please rerun the js\Combine.bat file. 
+                Otherwise it won't work when you will deploy on a server.
+            </div>
+
+		<div id="metro-sections-container" class="metro">
+                <div id="trash" class="trashcan">
+                    <img src="img/Trashcan.png" width="64" height="64" />
+                </div>
+                <div class="metro-sections" data-bind="foreach: sections">                   
+                    <div class="metro-section" data-bind="attr: {id : uniqueId}">
+                        <div class="metro-section-title" data-bind="{text: name}"></div>
+                        <!-- ko foreach: sortedTiles -->
+                            <div data-bind="attr: { id: uniqueId, 'class': tileClasses, 'style' : tileStyle }">
+                                <b class="check"></b>
+                                <!-- ko if: tileImage -->
+                                <div class="tile-image">
+                                    <img data-bind="attr: { src: tileImage }" src="img/Internet%20Explorer.png" />
+                                </div>
+                                <!-- /ko -->
+                                <!-- ko if: iconSrc -->
+                                <!-- ko if: slides().length == 0 -->
+                                <div data-bind="attr: { 'class': iconClasses }">
+                                    <img data-bind="attr: { src: iconSrc }" src="img/Internet%20Explorer.png" />
+                                </div>
+                                <!-- /ko -->
+                                <!-- /ko -->
+                                <div data-bind="foreach: slides">
+                                    <div class="tile-content-main">
+                                        <div data-bind="html: $data">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- ko if: label -->
+                                <div class="tile-label" data-bind="html: label">Label</div>
+                                <!-- /ko -->
+                                <!-- ko if: counter -->
+                                <span class="tile-counter" data-bind="html: counter">10</span>
+                                <!-- /ko -->
+                                <!-- ko if: subContent -->
+                                <div data-bind="attr: { 'class': subContentClasses }, html: subContent">
+                                    subContent
+                                </div>
+                                <!-- /ko -->
+                            </div>
+                        <!-- /ko -->
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div id="copyrightleft">            
+            Lianja&nbsp;&copy;&nbsp;<%= Lianja.version() %>
+        </div>
+        <div id="copyright">            
+            Copyright &copy; 2016 Lianja Inc. All Rights Reserved Worldwide.
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript" src="js/combined.js?v=24"></script>
+    
+<script type="text/javascript">
+    // Bootstrap initialization
+    $(document).ready(function () {
+        $('.dropdown-toggle').dropdown();
+	   /*lianja_resize();*/
+    });
+</script>
+        
+<script type="text/javascript">
+    /* need to get the name of the current user from a cookie */
+    lianja_getuser();
+</script>
+
+<script type="text/javascript" src="js/combineddashboard.js?v=24"></script>
+
+<script type="text/javascript">
+
+<%
+text raw
+
+// The default tile setup offered to new users.
+window.DefaultTiles = [
+    {
+        name : "Lianja Documentation",
+        tiles: [
+           { id: "lianjawebsite1", name: "lianjawebsite" },
+           { id: "gettingstarted1", name:"gettingstarted" },
+           { id: "tutorials1", name:"tutorials" },
+           { id: "lianjadevguide1", name: "lianjadevguide" },
+           { id: "lianjausersguide1", name: "lianjausersguide" },
+           { id: "docwiki1", name:"docwiki" },
+           { id: "lianjablog1", name: "lianjablog" },		   
+           { id: "lianjacommunity1", name: "lianjacommunity" }
+        ]
+	},
+	{
+        name : "JavaScript Documentation",
+        tiles: [
+           { id: "jstutorials1", name: "jstutorials" },
+           { id: "jquery1", name: "jquery" },
+		   { id: "jquerymomobile", name: "jquerymobile" },
+		   { id: "phonegap", name: "phonegap" },
+           { id: "knockout1", name: "knockout" },
+           { id: "backbone", name: "backbone" },
+           { id: "bootstrap", name: "bootstrap" }
+        ]
+     },
+	{
+        name : "PHP Documentation",
+        tiles: [
+           { id: "php1", name: "phpdoc" },
+           { id: "php2", name: "phptutorials" }
+        ]
+     },
+	{
+        name : "Python Documentation",
+        tiles: [
+           { id: "python1", name: "pythondoc" },
+           { id: "python2", name: "pythontutorials" }
+        ]
+     }
+];
+
+// Convert it to a serialized string
+window.DefaultTiles = _.map(window.DefaultTiles, function (section) {
+    return "" + section.name + "~" + (_.map(section.tiles, function (tile) {
+        return "" + tile.id + "," + tile.name;
+    })).join(".");
+}).join("|");
+
+
+
+// Definition of the tiles, their default values.
+window.TileBuilders = {
+
+    jstutorials: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "jstutorials",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            label: "JavaScript Tutorials",
+            color: "bg-color-darken",
+            tileStyle: "background-color:#ed962b !important;",
+            appUrl: "javascript:Lianja.showDocument('https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference')"
+        };
+    },
+
+    backbone: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "backbonetutorials",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            label: "Backbone",
+            color: "bg-color-darken",
+            tileStyle: "background-color:darkblue !important;",
+            appUrl: "javascript:Lianja.showDocument('http://backbonejs.org')"
+        };
+    },
+
+    phpdoc: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "phpdoc",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            label: "PHP Doc",
+            color: "bg-color-darken",
+            tileStyle: "background-color:#a800fa !important;",
+            appUrl: "javascript:Lianja.showDocument('http://php.net/manual/en/')"
+        };
+    },
+
+    phptutorials: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "phptutorials",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            label: "PHP Tutorials",
+            color: "bg-color-darken",
+            tileStyle: "background-color:#a800fa !important;",
+            appUrl: "javascript:Lianja.showDocument('http://www.w3schools.com/php/default.asp')"
+        };
+    },
+
+    pythondoc: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "pythondoc",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            label: "Python Doc",
+            color: "bg-color-darken",
+            tileStyle: "background-color:#1c4e63 !important;",
+            appUrl: "javascript:Lianja.showDocument('http://docs.python.org/2.7/')"
+        };
+    },
+
+    pythontutorials: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "pythontutorials",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            label: "Python Tutorials",
+            color: "bg-color-darken",
+            tileStyle: "background-color:#1c4e63 !important;",
+            appUrl: "javascript:Lianja.showDocument('http://docs.python.org/tutorial/')"
+        };
+    },
+
+    lianjawebsite: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "lianjawebsite",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            label: "Lianja WebSite",
+            color: "bg-color-darken",
+            appUrl: "javascript:Lianja.showDocument('http://www.lianja.com/')"
+        };
+    },
+
+    gettingstarted: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "amazon",
+            color: "bg-color-green",
+            label: "Getting Started",
+            description: "Getting Started",
+            tileStyle: "background-color:#8bc03d !important;",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appTitle: "Lianja Getting Started",
+            appUrl: "javascript:Lianja.showDocument('http://www.lianja.com/doc/index.php/Category:Getting_Started')"
+        };
+    },
+
+    docwiki: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "docwiki",
+            iconSrc: "img/lianja_logo96x96.png",
+            label: "Doc Wiki",
+            description: "Lianja Documentation Wiki",
+            tileStyle: "background-color:#1ba1a2 !important;",
+            appUrl: "javascript:Lianja.showDocument('http://www.lianja.com/doc/index.php/Main_Page')"
+        };
+    },
+
+    tutorials: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "tutorials",
+            iconSrc: "img/lianja_logo96x96.png",
+            label: "Video Tutorials",
+            description: "Lianja Video Tutorials",
+            color: "bg-color-blueDark",
+            appUrl: "javascript:Lianja.showDocument('http://videos.lianja.com')"
+        };
+    },
+
+    lianjadevguide: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "lianjadevguide",
+            label: "Developers Guide",
+            description: "Lianja Developers Guide",
+            tileStyle: "background-color:#b81b6c !important;",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appUrl: "javascript:Lianja.showDocument('http://www.lianja.com/doc/index.php/Category:Developers_Guide')"
+        };
+    },
+
+    lianjausersguide: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "lianjausersguide",
+            label: "Users Guide",
+            description: "Lianja Users Guide",
+            color: "bg-color-purple",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appUrl: "javascript:Lianja.showDocument('http://www.lianja.com/doc/index.php/Users_Guide')"
+        };
+    },
+
+    lianjablog: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "lianjanews",
+            label: "Blog",
+            description: "Lianja Blog",
+            color: "bg-color-red",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appUrl: "javascript:Lianja.showDocument('http://www.lianja.com/resources/blog')"
+        };
+    },
+
+    lianjacommunity: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "community",
+            label: "Developer Community",
+            description: "Lianja Developer Community",
+            tileStyle: "background-color:#2ea2dc !important;",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appUrl: "javascript:Lianja.showDocument('http://www.lianja.com/community/forum.php')"
+        };
+    },
+
+    jsfiddle: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "jsfiddle",
+            label: "JSfiddle",
+            description: "jsfiddle",
+            tileStyle: "background-color:#1AABAD !important;",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appUrl: "javascript:Lianja.showDocument('http://www.jsfiddle.net')"
+        };
+    },
+ 
+    jquery: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "jquery",
+            label: "jQuery",
+            description: "jQuery",
+            tileStyle: "background-color:#0769AD !important;",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appUrl: "javascript:Lianja.showDocument('http://www.jquery.com')"
+        };
+    },
+
+    jquerymobile: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "jquerymobile",
+            label: "jQuery Mobile",
+            description: "jQuery Mobile",
+            tileStyle: "background-color:#108040 !important;",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appUrl: "javascript:Lianja.showDocument('http://www.jquerymobile.com')"
+        };
+    },
+
+    phonegap: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "phonegap",
+            label: "PhoneGap",
+            description: "PhoneGap",
+            tileStyle: "background-color:#049ec4 !important;",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appUrl: "javascript:Lianja.showDocument('http://www.phonegap.com')"
+        };
+    },
+	
+    knockout: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "knockout",
+            label: "Knockout",
+            description: "Knockout",
+            tileStyle: "background-color:#e66fb4 !important;",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appUrl: "javascript:Lianja.showDocument('http://www.knockoutjs.com')"
+        };
+    },
+
+    bootstrap: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "bootstrap",
+            label: "Bootstrap",
+            description: "Bootstrap",
+            tileStyle: "background-color:#2ea2dc !important;",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appUrl: "javascript:Lianja.showDocument('http://getbootstrap.com/')"
+        };
+    },
+		
+    metrouicss: function (uniqueId) {
+        return {
+            uniqueId: uniqueId,
+            name: "metrouicss",
+            label: "Windows 8 UI",
+            description: "Windows 8 UI",
+            tileStyle: "background-color:#b81b6c !important;",
+            iconSrc: "img/lianja_logo96x96.png",
+            appIcon: "img/lianja512.png",
+            appUrl: "javascript:Lianja.showDocument('http://metroui.org.ua')"
+        };
+    }
+
+};
+
+endtext
+%>
+
+</script>
+
+<script type="text/javascript" src="js/dashboard.js?v=24"></script>
+
+<script type="text/javascript">
+window.ondragstart = function() { return false; };
+</script>
+
+</html>

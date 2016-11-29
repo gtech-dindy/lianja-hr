@@ -1,0 +1,150 @@
+<!--
+
+	This is a simple wrapper for the ckeditor which is used to edit WebViews.
+	
+-->
+
+<%@ Language=Recital %>
+<%
+//--
+// ckeditor.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_database  = getParameter("database", "") 
+private m_table  = getParameter("table", "") 
+private m_column  = getParameter("column", "") 
+//--
+private m_libpath = libPath()
+if isPhoneGap()
+	private m_server_protocol
+	m_server_protocol = getMember("_server", "SERVER_PROTOCOL", "")
+	if startsWith(m_server_protocol, "HTTPS")
+		m_server_protocol = "https://"
+	else
+		m_server_protocol = "http://"
+	endif
+	m_libpath = m_server_protocol + _server["SERVER_NAME"] + "/library"
+elseif isElectron()
+	m_libpath = iif(isElectronDebug(), "file:///library", "file:///resources/app.asar/library")
+else
+	m_libpath = "../../library"
+endif
+text raw
+<html>
+<head>
+	<meta content="text/html; charset=utf-8" http-equiv="content-type" />
+	<!-- notice how the paths are relative to the app directory -->
+	<script>
+	window.CKEDITOR = undefined;
+	</script>
+	<script src="&m_libpath/ckeditor/ckeditor.js"></script>
+	<style type="text/css">
+		body { 
+			margin: 0px ;
+			padding : 0px ;
+			height : 100% !important;
+			overflow-y: none;
+		}
+		.editorwrapper {
+			overflow-x: auto;
+			overflow-y: none;
+			height : 100% !important;
+			width : 100%;
+		}
+		.lianjaeditor { 
+			overflow-y: none;
+			-webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+			-moz-box-sizing: border-box;    /* Firefox, other Gecko */
+			box-sizing: border-box;         /* Opera/IE 8+ */
+			height : 100% !important;
+			width : 100%;
+		}
+	</style>
+    <script type="text/javascript">
+		//--------------------------------------------------------------------------------
+        function resizeEditorWrapper() 
+        {
+	        var heightOfBody = document.documentElement.clientHeight;
+            document.getElementById('editorwrapper').style.height = heightOfBody;
+			CKEDITOR.replace('lianjaeditor',
+			 	{
+					extraPlugins : 'docprops',
+			    	on: {  
+				    'instanceReady' : 
+				    	function (evt) 
+					    { 
+				            m_ready = true; 
+							lianja_resize();
+	 	    			  	CKEDITOR.instances.lianjaeditor.setData(m_data, function() {
+		        				this.checkDirty();
+					        });
+			        	}
+					}
+				}
+			);
+        }
+		//--------------------------------------------------------------------------------
+        function lianja_resize() 
+        {
+        	var heightOfBody;
+            heightOfBody = document.documentElement.clientHeight;
+            document.getElementById('editorwrapper').style.height = heightOfBody;
+        	if (!m_ready) return;
+            CKEDITOR.instances.lianjaeditor.resize("100%", heightOfBody);
+        }
+		//--------------------------------------------------------------------------------
+        function getEditorData()
+        {
+        	return CKEDITOR.instances.lianjaeditor.getData();
+	    }
+		//--------------------------------------------------------------------------------
+       	function setEditorData(data)
+        {
+ 	        m_data = unescape(data);
+ 	        if (m_ready)
+	       	{
+		    	CKEDITOR.instances.lianjaeditor.setData(m_data, function() {
+		        	this.checkDirty();
+				});
+			}
+			return true;
+	    }
+    </script>
+</head>
+
+<!-- This is just a wrapper for the CKEDITOR. Any other editor can be embedded here -->
+<body onload="resizeEditorWrapper();" onresize="lianja_resize();">
+	<div id="editorwrapper" class="editorwrapper">
+	<textarea id="lianjaeditor" name="lianjaeditor" class="lianjaeditor">
+	</textarea>
+	</div>
+	<script type="text/javascript">
+    	var m_data = "";
+	    var m_ready = false;
+		CKEDITOR.config.toolbar_Full =
+		[
+			{ name: 'document',		items : [ 'Source','-','NewPage','DocProps','-','Templates' ] },
+			{ name: 'clipboard',	items : [ 'Cut','Copy','Paste','PasteText','PasteFromWord','-','Undo','Redo' ] },
+			{ name: 'editing',		items : [ 'Find','Replace','-','SelectAll','-','SpellChecker', 'Scayt' ] },
+			{ name: 'forms',		items : [ 'Form', 'Checkbox', 'Radio', 'TextField', 'Textarea', 'Select', 'Button', 'ImageButton', 'HiddenField' ] },
+			'/',
+			{ name: 'basicstyles',	items : [ 'Bold','Italic','Underline','Strike','Subscript','Superscript','-','RemoveFormat' ] },
+			{ name: 'paragraph',	items : [ 'NumberedList','BulletedList','-','Outdent','Indent','-','Blockquote','CreateDiv','-','JustifyLeft','JustifyCenter','JustifyRight','JustifyBlock','-','BidiLtr','BidiRtl' ] },
+			{ name: 'links',		items : [ 'Link','Unlink','Anchor' ] },
+			{ name: 'insert',		items : [ 'Image','Table','HorizontalRule','Smiley','SpecialChar','PageBreak','Iframe' ] },
+			'/',
+			{ name: 'styles',		items : [ 'Styles','Format','Font','FontSize' ] },
+			{ name: 'colors',		items : [ 'TextColor','BGColor' ] },
+			{ name: 'tools',		items : [ 'ShowBlocks' ] }
+		];
+		CKEDITOR.config.resize_enabled = false;
+		CKEDITOR.config.toolbarCanCollapse = false;
+		CKEDITOR.config.skin = "kama";
+		CKEDITOR.config.dialog_backgroundCoverColor = "#a0a0a0";
+	</script>
+</body>
+</html>
+endtext
+%>
+

@@ -1,0 +1,36 @@
+* Lianja Server
+* Version 1.3.0
+* Compiled on Feb 18 2015 10:54:03
+*
+* logfile C:\lianja\cloudserver\tenants\public\log\portserver_008.log
+* started at Fri Feb 27 09:59:47 2015
+* on barrymavin-win7 pid 2352
+*
+RSI: **** Port server activated ****
+     ident        = [tcp_accept]
+     time         = 09:59:47
+     pid          = 00000930
+RSI: **** getservbyname("db_rsibase","tcp") port=8001 ****
+     ident        = [tcp_accept]
+     time         = 09:59:47
+     pid          = 00000930
+RSI: **** setsockopt SO_RCVBUF=16384 ****
+     ident        = [tcp_accept]
+     time         = 09:59:47
+     pid          = 00000930
+RSI: **** setsockopt SO_SNDBUF=16384 ****
+     ident        = [tcp_accept]
+     time         = 09:59:47
+     pid          = 00000930
+RSI: **** socket buffer sizes - so_rcvbuf=16384, so_sndbuf=16384 ****
+     ident        = [tcp_accept]
+     time         = 09:59:47
+     pid          = 00000930
+RSI: **** licensetype - Lianja APaaS Developer Edition ****
+     ident        = [tcp_accept]
+     time         = 09:59:47
+     pid          = 00000930
+RSI: **** waiting for client connection request on port 8001 ****
+     ident        = [tcp_accept]
+     time         = 09:59:47
+     pid          = 00000930

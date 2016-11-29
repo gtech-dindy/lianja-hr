@@ -1,0 +1,219 @@
+<!--
+
+	This is a simple wrapper for OrgChart sections.
+	
+-->
+<%@ Language=VFP %>
+<%
+//--
+// orgchart.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_database  = getParameter("database", "southwind") 
+private m_table  = getParameter("table", "employees") 
+private m_titlebackcolor  = getParameter("titlebackcolor", "lightblue") 
+private m_columnid  = getParameter("idcolumn", "employeeid") 
+private m_keycolumn  = getParameter("keycolumn", "lastname") 
+private m_parentid  = getParameter("idparentcolumn", "reportsto") 
+private m_caption  = getParameter("caption", base64_encode("title")) 
+private m_description  = getParameter("description", base64_encode("trim(firstname)+' '+trim(lastname)+'<br>'+etos(hiredate)")) 
+private m_showcontrols  = getParameter("showcontrols", "false") 
+private m_editable  = getParameter("editable", "false") 
+private m_addcaption  = getParameter("addcaption", "") 
+private m_nodewidth  = getParameter("nodewidth", "160") 
+private m_nodeheight  = getParameter("nodeheight", "60") 
+private m_backcolordelegate  = getParameter("backcolordelegate", "") 
+private m_forecolordelegate  = getParameter("forecolordelegate", "") 
+private m_clickdelegate  = getParameter("clickdelegate", "") 
+private m_dblclickdelegate  = getParameter("dblclickdelegate", "") 
+private m_customlibrary = getParameter("customlibrary", "")
+private m_filter  = getParameter("filter", "") 
+private m_backcolor
+private m_forecolor
+
+m_caption = base64_decode(m_caption)
+m_description = base64_decode(m_description)
+m_filter = base64_decode(m_filter)
+
+if len(m_customlibrary) > 0
+	set procedure to &m_customlibrary
+endif
+
+//--
+text raw
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+endtext
+
+if isServer() or .t.
+	? [<link  href="../../library/orgchart/jquery.orgchart.css" rel="stylesheet" type="text/css" />] 		
+	? [<script type="text/javascript" src="../../library/jquery-1.11.0/jquery-1.11.0.min.js"></script>]
+	? [<script type="text/javascript" src="../../library/orgchart/jquery.orgchart.js"></script>]
+else
+	? [<link  href="lib:/orgchart/jquery.orgchart.css" rel="stylesheet" type="text/css" />] 		
+	? [<script type="text/javascript" src="lib:/jquery-1.11.0/jquery-1.11.0.min.js"></script>]
+	? [<script type="text/javascript" src="lib:/orgchart/jquery.orgchart.js"></script>]
+endif
+  
+text raw
+  
+<style type="text/css">
+
+#orgChart {
+    width: auto;
+    height: auto;
+}
+
+#orgChartContainer{
+    width: 100%;
+    height: auto;
+    overflow: auto;
+    background: #eeeeee;
+}
+
+body {
+	margin:0px;
+    background: #eeeeee;
+}
+
+</style>
+
+</head>
+<body>
+    <div id="orgChartContainer">
+      <div id="orgChart"></div>
+    </div>
+    
+    <script type="text/javascript">
+	
+//--------------------------------------------------------------------------------
+function callClickDelegate(data)
+{
+	if ("&m_clickdelegate" == "") return;
+	// see if there is a JavaScript delegate and if not evaluate on the server
+	try
+	{
+		if (Lianja.isDevMode())
+		{
+			var result = Lianja.evaluate("javascript:&m_clickdelegate('" + data + "');");
+			if (typeof result === 'string' && result == 'error: undefined function')
+			{
+				throw "error";
+			}
+		}
+		else
+		{
+			eval("window.parent.&m_clickdelegate('" + data + "')");
+		}
+	}
+	catch (e)
+	{
+		Lianja.evaluate("&m_clickdelegate('" + data + "')");
+	}
+};
+
+//--------------------------------------------------------------------------------
+function callDblClickDelegate(data)
+{
+	if ("&m_dblclickdelegate" == "") return;
+	// see if there is a JavaScript delegate and if not evaluate on the server
+	try
+	{
+		if (Lianja.isDevMode())
+		{
+			var result = Lianja.evaluate("javascript:&m_dblclickdelegate('" + data + "');");
+			if (typeof result === 'string' && result == 'error: undefined function')
+			{
+				throw "error";
+			}
+		}
+		else
+		{
+			eval("window.parent.&m_dblclickdelegate('" + data + "')");
+		}
+	}
+	catch (e)
+	{
+		Lianja.evaluate("&m_dblclickdelegate('" + data + "')");
+	}
+};
+	
+endtext
+
+text raw    
+    var testData = [
+endtext
+    
+? "{id: 1, name: '', description: '', backcolor: '', parent: 0},"
+
+save datasession
+open database &m_database
+use &m_table in 0 current
+if len(m_filter)>0
+	m_filter = "for "+m_filter
+endif
+scan &m_filter
+	if len(m_backcolordelegate) > 0
+		m_backcolor = &m_backcolordelegate()
+	else
+		m_backcolor = ""
+	endif
+	if len(m_forecolordelegate) > 0
+		m_forecolor = &m_forecolordelegate()
+	else
+		m_forecolor = ""
+	endif
+
+	? [{id: ] + etos(&m_columnid) + ;
+	  [, name: '] + alltrim(&m_caption) + ['] + ;
+	  [, description: '] + alltrim(etos(&m_description)) + ['] + ;
+	  [, keycolumn: '] + alltrim(etos(&m_keycolumn)) + ['] + ;
+	  [, backcolor: '&m_backcolor'] + ;
+	  [, forecolor: '&m_forecolor'] + ;
+	  [, parent: ] + etos(&m_parentid) + [},]
+endscan
+
+text raw    
+    ];
+    
+    $(function(){
+        org_chart = $('#orgChart').orgChart({
+            data: testData,
+endtext
+			?
+            ? [showControls: &m_showcontrols,]
+            ? [allowEdit: &m_editable,]
+            ? [newNodeText: "&m_addcaption",]
+            ? [nodeWidth: "&m_nodewidth.px",]
+            ? [nodeHeight: "&m_nodeheight.px",]
+text raw
+            onAddNode: function(node){ 
+                org_chart.newNode(node.data.id); 
+            },
+            onDeleteNode: function(node){
+                org_chart.deleteNode(node.data.id); 
+            },
+            onClickNode: function(node){
+				callClickDelegate(node.data.keycolumn);
+            },
+            onDblClickNode: function(node){
+				callDblClickDelegate(node.data.keycolumn);
+            },
+            onEditNode: function(node){
+            }
+        });
+    });
+
+	document.onselectstart = function() { return false; };
+
+	</script>
+	
+</body>
+</html>
+endtext
+restore datasession
+%>

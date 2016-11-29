@@ -1,0 +1,200 @@
+* Lianja Server
+* Version 1.3.0
+* Compiled on Feb 18 2015 10:54:03
+*
+* logfile C:\lianja\cloudserver\tenants\public\log\portserver_012.log
+* started at Fri Feb 27 10:18:58 2015
+* on barrymavin-win7 pid 1488
+*
+RSI: **** Port server activated ****
+     ident        = [tcp_accept]
+     time         = 10:18:58
+     pid          = 000005d0
+RSI: **** getservbyname("db_rsibase","tcp") port=8001 ****
+     ident        = [tcp_accept]
+     time         = 10:18:58
+     pid          = 000005d0
+RSI: **** setsockopt SO_RCVBUF=16384 ****
+     ident        = [tcp_accept]
+     time         = 10:18:58
+     pid          = 000005d0
+RSI: **** setsockopt SO_SNDBUF=16384 ****
+     ident        = [tcp_accept]
+     time         = 10:18:58
+     pid          = 000005d0
+RSI: **** socket buffer sizes - so_rcvbuf=16384, so_sndbuf=16384 ****
+     ident        = [tcp_accept]
+     time         = 10:18:58
+     pid          = 000005d0
+RSI: **** licensetype - Lianja APaaS Developer Edition ****
+     ident        = [tcp_accept]
+     time         = 10:18:58
+     pid          = 000005d0
+RSI: **** waiting for client connection request on port 8001 ****
+     ident        = [tcp_accept]
+     time         = 10:18:58
+     pid          = 000005d0
+RSI: **** reading on port 8001 ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** client connection request received (480) ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** HTTP server requested - GET /log ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** new port address = 8001 ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** allocated port 8001, baseport=8001, maxport=-1 ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** spawning server process - C:\lianja\server\bin\db_httpserver.exe 480:127.0.0.1 ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** spawning server process waitfor_child_server - c:\temp\rsi_480.tmp ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** waitfor_child_server() handshake completed after 111ms ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** spawned server process ok ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** master process AppServer[0] = 1120 ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** sending port id of 8001 to client ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** sent to client ok ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** waiting for client connection request on port 8001 ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** reading on port 8001 ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** client connection request received (480) ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** HTTP server requested - GET /log ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** new port address = 8001 ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** allocated port 8001, baseport=8001, maxport=-1 ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** spawning server process - C:\lianja\server\bin\db_httpserver.exe 480:127.0.0.1 ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** spawning server process waitfor_child_server - c:\temp\rsi_480.tmp ****
+     ident        = [tcp_accept]
+     time         = 10:19:11
+     pid          = 000005d0
+RSI: **** waitfor_child_server() handshake completed after 111ms ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** spawned server process ok ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** master process AppServer[0] = 1120 ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** sending port id of 8001 to client ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** sent to client ok ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** waiting for client connection request on port 8001 ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** reading on port 8001 ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** client connection request received (480) ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** HTTP server requested - GET /lib ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** new port address = 8001 ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** allocated port 8001, baseport=8001, maxport=-1 ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** spawning server process - C:\lianja\server\bin\db_httpserver.exe 480:127.0.0.1 ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** spawning server process waitfor_child_server - c:\temp\rsi_480.tmp ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** waitfor_child_server() handshake completed after 111ms ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** spawned server process ok ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** master process AppServer[0] = 1120 ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** sending port id of 8001 to client ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** sent to client ok ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** waiting for client connection request on port 8001 ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** reading on port 8001 ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0
+RSI: **** client connection request received (480) ****
+     ident        = [tcp_accept]
+     time         = 10:19:12
+     pid          = 000005d0

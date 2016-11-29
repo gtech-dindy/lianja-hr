@@ -1,0 +1,149 @@
+body {
+	padding: 0px;
+	margin: 0px;
+	border: 1px solid white;
+	border-top: 1px solid white;
+	height: 99%;
+}
+tr.headingtopborder td {
+	border-bottom: 3px solid gray;
+	background: #f5f5f5;
+	color:black; 
+}
+tr.heading td {
+	background: #eaeaea;
+	padding: 5px; 
+	height: 20px;
+	font-size:small;
+	border-right: 1px solid lightgray;
+	text-align: center;
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+}
+tr.headingbottomborder td {
+	border-bottom: 1px solid lightgray;
+	background: #f5f5f5;
+	height: 1px;
+	color:white; 
+}
+tr.headingtopborder td {
+	background: white;
+	background: #f5f5f5;
+	height: 1px;
+	color:white; 
+}
+tr.doublegrayborder td {
+	border-bottom: 2px double lightgray;
+	background: #f5f5f5;
+	color:black; 
+	padding-right: 10px;
+	font-size:small;
+}
+tr.tablebottomborder td {
+	border-bottom: 1px solid lightgray;
+	background: #f5f5f5;
+	height: 1px;
+	color:white; 
+}
+td.tile {
+height: 200px;
+width: 200px;
+}
+.headingcaption {
+	padding: 5px;
+	background: #2c2e31;
+	font-weight: bold;
+	color: white;
+	height: 30px;
+	vertical-align:middle;
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+}
+.headingsubcaption {
+	background: lightgray;
+	font-weight: bold;
+	color: white;
+	padding-left:2px;
+	padding-bottom:3px;
+	vertical-align:middle;
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+}
+.tablecaption {
+	background: white;
+	font-weight: bold;
+	color: #d37316;
+	vertical-align:middle;
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+}
+.tabledetails {
+	background: white;
+	font-size:small;
+	color: gray;
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+}
+.tablelink {
+	padding: 10px;
+	background: white;
+	font-size:small;
+	color: #4f93ca;
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+}
+.datacellgridline {
+	border: 0px;
+	height: 1px;
+}
+.datacell {
+	border: 0px;
+	border-bottom: 1px solid lightgray;
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+}
+.datacellnoborder {
+	border: 0px;
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+}
+.cellfooterlink {
+	padding: 5px;
+	background: white;
+	font-size:small;
+	color: lightgray;
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+}
+.cellfooterlink a:link {
+	padding: 5px;
+	background: white;
+	font-size:small;
+	color: lightgray;
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+}
+.cellfooterlink a:hover {
+	padding: 5px;
+	background: white;
+	font-size:small;
+	text-decoration: underline;
+	color: lightgray;
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+}
+.separatordiv {
+	border-bottom: 1px solid lightgray;
+	background: #f5f5f5;
+	height: 1px;
+	width:100%;
+	color:white; 
+}
+.shadowbox
+{
+	border: 1px solid #eee;
+}
+.shadow {
+  -moz-box-shadow:    3px 3px 5px 6px #eee;
+  -webkit-box-shadow: 3px 3px 5px 6px #eee;
+  box-shadow:         3px 3px 5px 6px #eee;
+}
+.shadowright {
+	-moz-box-shadow: 5px 0 5px -5px #eee;
+	-webkit-box-shadow: 5px 0 5px -5px #eee;
+	box-shadow: 5px 0 5px -5px #eee;
+}			
+.shadowbottom {
+	-moz-box-shadow: 0 5px 5px -5px #eee;
+	-webkit-box-shadow: 0 5px 5px -5px #eee;
+	box-shadow: 0 5px 5px -5px #eee;
+}

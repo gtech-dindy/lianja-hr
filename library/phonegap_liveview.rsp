@@ -1,0 +1,67 @@
+<%@ Language=VFP %>
+<html>
+<head>
+<link rel="stylesheet" href="../../library/bootstrap-3.3.4/css/bootstrap.min.css">
+<script src="../../library/jquery-1.10.2/jquery-1.10.2.min.js" type="text/javascript"></script>
+<script src="../../library/bootstrap-3.3.4/js/bootstrap.min.js" type="text/javascript"></script>
+<style>
+body {
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Arial, Verdana, sans-serif;
+	line-height: 15px;
+	color: #222;
+	font-size:13px;
+	margin:5px;
+	background-color:#fafafa;
+}
+.status {
+	border: 1px solid #309dc2;	
+	width:260px;
+	border-radius:6px;
+}
+.heading {
+	padding:0px;
+	color: #c60;
+	margin-left:5px !important;
+}
+.subheading {
+	color: #407EB8;
+	padding:5px;
+}
+h1 {
+    font-size: 2em;
+    font-weight: 300;
+	padding:0px;
+}
+p, .p {
+    display: block;
+    line-height: 1.5em;
+	margin: 15px;
+}
+
+.button-blue, 
+.button-green { color: #FFFFFF !important; padding: 7px 16px 8px 16px !important; font: normal 18px 'Lucida Grande', Helvetica, Arial, Verdana, sans-serif; color: #616161; text-decoration: none !important; letter-spacing: .08em; -webkit-border-radius: 3px; -moz-border-radius: 3px; border-radius: 3px; }
+.button-blue { color: #fff !important; background-color: #1e98d4; box-shadow: /*inset 0px -1px 1px 0px #0b364b,*/ inset 0px -1px 1px 0px #136288, inset 0px 4px 4px -4px #FFFFFF, inset 1px -1px 1px 0px #1a86bb, inset -1px -1px 1px 0px #1a86bb }
+.button-blue:hover{ background-color: #1D95D0 !important;box-shadow: /*inset 0px -1px 1px 0px #0b364b,*/ inset 0px -1px 1px 0px #136288, inset 0px 2px 2px -2px #FFFFFF, inset 1px -1px 1px 0px #1a86bb, inset -1px -1px 1px 0px #1a86bb; }
+.button-blue:active{ background-color: #1b8bc2 !important; box-shadow: /*inset 0px -1px 1px 0px #0b364b,*/ inset 0px -1px 1px 0px #136288, inset 0px 2px 2px -2px #FFFFFF; }				
+</style>
+</head>
+<body>
+<h2 class="heading">PhoneGap Live View</h2>
+<p>
+Lianja App Builder has integrated support for developing, testing and building PhoneGap mobile Apps for phones and tablets. 
+<p>
+<h3 class="subheading">Install the Adobe PhoneGap Developer App on your mobile device</h3>
+<p>The Adobe PhoneGap Developer App is a free download for iOS (Apple App Store), Android (Google Play) and Windows Phone (Windows Phone App Store). Just search for "PhoneGap" in the App Store to find it.</p><p>You should download and install this onto the tablet or phone which you will be using for testing.</p>
+<h3 class="subheading">Running the Adobe PhoneGap Developer App</h3>
+<p>To test your PhoneGap Mobile App live as you develop it in the Lianja App Builder you will need to connect your mobile device and your development computer into the same Wifi network so that they can connect to each other. 
+&nbsp;</p><p>Once you have done this and you have the Adobe PhoneGap Developer App installed&nbsp; 
+ on a mobile device (tablet or phone) you should enter the IP address of the machine that Lianja App Builder is running on. You will then see your App on the&nbsp; 
+ mobile device changing dynamically as you develop it visually in Lianja. </p> 
+<p>There is no need to install any SDK or other software (everything is included in Lianja App Builder) and you&nbsp; 
+can develop and test iOS, Android and WinPhone Apps on any of the operating systems that Lianja App Builder runs on. </p>
+<p>With access to device APIs not available in web browsers,&nbsp;
+you don't have to sacrifice the confidence that your app will work as you intended on the devices you are targeting.</p>
+<h3 class="subheading">Testing a PhoneGap Mobile App</h3> 
+<p>You develop your Apps locally then see the changes instantly on your mobile device (iOS, Android and WinPhone).&nbsp; </p><p>
+There is no need to re-sign, re-compile, or reinstall your app to test your code as Lianja App Builder integrates in&nbsp; 
+with the Adobe Developer App. </p><p>You build your App visually in the <b>Pages</b> workspace then click the <b>Tablet App View</b> or the <b>Phone App View</b> icon in the page headerbar to display the Tablet or Phone view respectively, then click the <b>LiveView</b> icon to see the App on the Tablet or Phone that you have installed the PhoneGap Developer App on. You can refresh the view at any time on your mobile device with a 4-finger tap. </p>

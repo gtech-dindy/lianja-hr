@@ -1,0 +1,200 @@
+<%@ Language=VFP %>
+<html>
+<head>
+<meta charset="UTF-8" />
+<meta name="description" content="Lianja Page Center" />
+<meta name="author" content="Lianja Inc." />
+<meta name="copyright" content="2015, Lianja Inc." />
+<meta name="apple-mobile-web-app-capable" content="yes" /> 
+
+<style>
+#mainbody {
+    overflow: hidden;
+    overflow-x: auto;
+    ms-overflow-x: auto;
+    min-height: 100%;
+    overflow-y: hidden;
+    ms-overflow-y: hidden;
+    background-image: none !important;
+	background-color: #363636 !important;
+}
+
+#body {
+    overflow: hidden;
+    overflow-x: auto;
+    ms-overflow-x: auto;
+    min-height: 100%;
+    overflow-y: hidden;
+    ms-overflow-y: hidden;
+}
+</style>
+<%
+private m_mobile = isPhoneGap() or getMember("_args", "TARGETUI", "") = "phone"
+private m_libpath
+if isPhoneGap()
+	private m_server_protocol
+	m_server_protocol = getMember("_server", "SERVER_PROTOCOL", "")
+	if startsWith(m_server_protocol, "HTTPS")
+		m_server_protocol = "https://"
+	else
+		m_server_protocol = "http://"
+	endif
+	m_libpath = m_server_protocol + _server["SERVER_NAME"] + "/library"
+	text raw
+	<style>
+	#sectiontitle {
+		font-family: inherit;
+		font-size: 24px;
+		color: white;  
+		font-smooth: always;
+		text-shadow: 0 0 1px rgba(255,255,255,0.3);
+	}	
+	</style>
+	endtext
+else
+	m_libpath = "../../library"
+	text raw
+	<style>
+	#sectiontitle {
+		font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+		font-size: 24px;
+		color: white;  
+		font-smooth: always;
+		text-shadow: 0 0 1px rgba(255,255,255,0.3);
+	}	
+	</style>
+	endtext
+endif
+%>
+<script type="text/javascript" src="&m_libpath/pagecenter/js/jquery-1.7.2.min.js"></script>
+<link rel="stylesheet" type="text/css" href="&m_libpath/pagecenter/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="&m_libpath/pagecenter/css/droptiles.css?v=24">
+</head>
+
+<%
+if m_mobile or .t.
+	text raw
+	<style>
+	#start-pc {
+		height: 40px;
+		font-family: inherit;
+		font-size: 18pt;
+		color: white;
+		position: fixed;
+		left: 15px;
+		top: 25px;
+	}
+	::-webkit-scrollbar {
+		width: 0px;
+		height: 0px;
+	}
+	#content {
+		margin-left: 15px;
+	}	
+	#metro-sections-container-pc {
+		left: 15px;
+		top: 0px;
+	}	
+	
+	</style>
+	endtext
+endif
+%>
+
+<body id="mainbody" oncontextmenu='return false;'>
+    <div id="body" class="unselectable" style="cursor:default !important;">
+<%
+	if m_mobile
+		? '<div id="content" style="background-color:#333333;">'
+	else
+		? '<div id="content" style="visibility: hidden">'
+	endif
+%>
+<%
+//if !m_mobile 
+//	? '<div id="start-pc">' + getParameter("appdescription", "Page Center") + '</div>'
+//endif
+%>
+            <div id="browser_incompatible" class="alert">
+                <button class="close" data-dismiss="alert">×</button>
+                <strong>Warning!</strong>
+                Your browser is incompatible with Lianja. Please use Internet Explorer 9+, Chrome, Firefox or Safari.
+            </div>
+            <div id="CombinedScriptAlert" class="alert">
+                <button class="close" data-dismiss="alert">×</button>
+                <strong>Warning!</strong>
+                Combined javascript files are outdated. 
+                Please rerun the js\Combine.bat file. 
+                Otherwise it won't work when you will deploy on a server.
+            </div>
+
+		 <div id="metro-sections-container-pc" class="metro">
+                <div class="metro-sections" data-bind="foreach: sections">                   
+                    <div class="metro-section" data-bind="attr: {id : uniqueId}">
+                        <div class="metro-section-title" data-bind="{text: name}"></div>
+                        <!-- ko foreach: sortedTiles -->
+                            <div data-bind="attr: { id: uniqueId, 'class': tileClasses, 'style' : tileStyle }">
+                                <b class="check"></b>
+                                <!-- ko if: tileImage -->
+                                <div class="tile-image">
+                                    <img data-bind="attr: { src: tileImage }" />
+                                </div>
+                                <!-- /ko -->
+                                <!-- ko if: iconSrc -->
+                                <!-- ko if: slides().length == 0 -->
+                                <div data-bind="attr: { 'class': iconClasses }">
+                                    <img data-bind="attr: { src: iconSrc }" />
+                                </div>
+                                <!-- /ko -->
+                                <!-- /ko -->
+                                <div data-bind="foreach: slides">
+                                    <div class="tile-content-main">
+                                        <div data-bind="html: $data">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- ko if: label -->
+                                <span class="tile-label" data-bind="text: label"></span>
+                                <!-- /ko -->
+                                <!-- ko if: counter -->
+                                <span class="tile-counter" data-bind="html: counter"></span>
+                                <!-- /ko -->
+                                <!-- ko if: subContent -->
+                                <div data-bind="attr: { 'class': subContentClasses }, html: subContent"></div>
+                                <!-- /ko -->
+                            </div>
+                        <!-- /ko -->
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script type="text/javascript" src="&m_libpath/pagecenter/js/combined.js?v=24"></script>
+    
+<script type="text/javascript">
+    // Bootstrap initialization
+    $(document).ready(function () {
+        $('.dropdown-toggle').dropdown();
+    });
+</script>
+        
+<script type="text/javascript" src="&m_libpath/pagecenter/js/combineddashboard.js?v=24"></script>
+
+<script type="text/javascript">
+
+<%@ include="pagecentertiles.prg" %>
+
+</script>
+
+
+<script type="text/javascript" src="&m_libpath/pagecenter/js/dashboard.js?v=24"></script>
+
+<script type="text/javascript">
+window.ondragstart = function() { return false; };
+</script>
+
+</body>
+
+</html>
