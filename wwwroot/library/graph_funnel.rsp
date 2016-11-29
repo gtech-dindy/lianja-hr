@@ -1,0 +1,131 @@
+<%@ Language=Recital %>
+<html>
+
+<%
+private m_libpath
+if isPhoneGap()
+	m_libpath = "js/library"
+elseif isElectron()
+	m_libpath = iif(isElectronDebug(), "file:///library", "file:///resources/app.asar/library")
+else
+	m_libpath = libPath()
+endif
+? "<head>"
+? '<script src="&m_libpath/graphs/RGraph.common.core.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.tooltips.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.effects.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.key.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.funnel.js"></script>'
+? "</head>"
+%>
+
+<%
+set macros on
+//--
+// graph_funnel.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_width  = getParameter("width", "400") 
+private m_height = getParameter("height", "250") 
+private m_id     = getParameter("id", "graphCanvas") 
+private m_data = getParameter("data", "100,45,45,26,21,5") 
+private m_labels = getParameter("labels", "Jan,Feb,Mar,Apr,May,Jun") 
+private m_tooltips = getParameter("tooltips", "Jan,Feb,Mar,Apr,May,Jun") 
+private m_guttertop = getParameter("guttertop", "25") 
+private m_gutterbottom = getParameter("gutterbottom", "25") 
+private m_gutterleft = getParameter("gutterleft", "50") 
+private m_gutterright = getParameter("gutterright", "25") 
+private m_shadow  = getParameter("shadow", "true") 
+private m_title  = getParameter("title", "Untitled Funnel Chart") 
+private m_titleleft  = getParameter("titleleft", "2010") 
+private m_titleright  = getParameter("titleright", "2011") 
+private m_titleforecolor  = getParameter("titleforecolor", "gray") 
+private m_titlebackcolor  = getParameter("titlebackcolor", "") 
+private m_labelsabove  = getParameter("labelsabove", "true") 
+private m_margin  = getParameter("margin", "5") 
+private m_colors  = getParameter("colors", "#eef,#ddf,#ccf,#bbf,#bbf,#aaf,#99f,#88f") 
+private m_labelforecolor  = getParameter("labelforecolor", "gray") 
+private m_delegate  = getParameter("delegate", "") 
+private m_backcolor  = getParameter("backcolor", "#f7f7f7") 
+
+// emit javascript code
+text raw
+<body style="background:&m_backcolor;overflow:hidden;">
+<style>
+.center-div
+{
+     position: relative;
+     margin: auto;
+     top: 0;
+     right: 0;
+     bottom: 0;
+     left: 0;
+     width: &m_width.px;
+     height: &m_height.px;
+}
+</style>
+<div class="center-div">
+<canvas id="&m_id" width="&m_width.px" height="&m_height.px" style="background:&m_backcolor;overflow:hidden;">[No canvas support]</canvas>
+</div>
+<script>
+    window.onload = function ()
+    {
+	    var data = [&m_data];
+	    var tooltips = [];
+	    var i;
+	    var tips = "&m_tooltips";
+	    var labels = "&m_labels";
+	    var colors = "&m_colors";
+	    
+	    tips = tips.split(",");
+	    for (i=0; i<tips.length; ++i) tooltips.push(tips[i]);	
+	    labels = labels.split(",");
+    	colors = colors.split(",");
+
+        // Create the Funnel chart. Note the the values start at the maximum and decrease to the minimum.
+        var chart = new RGraph.Funnel('&m_id', [&m_data]);
+        
+        // Configure the chart to look as wished.
+        chart.Set('chart.text.boxed', true);
+        chart.Set('chart.title', '&m_title');
+        chart.Set('chart.labels', labels);
+        chart.Set('chart.labels.x', 5);
+        chart.Set('chart.hmargin', &m_margin);
+      	chart.Set('chart.gutter.left', &m_gutterleft);
+    	chart.Set('chart.gutter.right', &m_gutterright);
+    	chart.Set('chart.gutter.top', &m_guttertop);
+    	chart.Set('chart.gutter.bottom', &m_gutterbottom);
+    	chart.Set('chart.shadow', &m_shadow);
+  	    chart.Set('chart.title', '&m_title');
+	    if ('&m_titlebackcolor' != '') chart.Set('chart.title.background', '&m_titlebackcolor');
+	    chart.Set('chart.title.color', '&m_titleforecolor');		
+ 	    chart.Set('chart.colors.sequential', true);
+	    chart.Set('chart.colors', colors);
+  	    chart.Set('chart.text.color', '&m_labelforecolor');
+      
+        // Now call the .Draw() method to draw the chart.
+		chart.Set('chart.tooltips', tooltips);
+		chart.Set("chart.tooltips.event", "onclick");
+        chart.Draw();
+        
+		// the click_handler will get called when a bar is clicked on
+		// if this is running inside a webview then an event is dispatched back into
+		// the Lianja runtime
+		function click_handler(canvas, text, x, y, idx)
+	    {
+	        if (typeof(Lianja)=="object")
+	        {
+	        	Lianja.dispatchEvent("&m_delegate", tips[idx]);
+		    }
+	    }  
+	    chart.Set('chart.tooltips.override', click_handler);        
+    }
+</script>
+
+endtext
+%>
+</body>
+</html>
+
+

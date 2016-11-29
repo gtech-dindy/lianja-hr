@@ -1,0 +1,89 @@
+<%@ Language="VFP" %>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Lianja example - file upload</title>
+</head>
+<body>
+<%
+
+// get the hostname for the remote machine requesting the page
+? "_server[ ]"
+foreach _server as name=>value 
+   ? "<br>   &name="+etos(value)
+next
+? "<br><br>"
+? date()
+? time()
+? "<br><br>"
+
+cc=len(_COOKIE)
+if cc > 0
+	? "Active session Cookies ("+alltrim(str(cc))+")"
+	foreach _cookie as name=>value 
+		? "<br>   &name="+etos(value)
+	endfor
+else
+	? "There are no active session cookies."
+endif
+? "<br><br>"
+
+ss=len(_SESSION)
+if ss > 0
+	? "Active session variables ("+alltrim(str(ss))+")"
+	foreach _session as name=>value 
+		? "<br>   &name="+etos(value)
+	next
+else
+	? "There are no active session variables."
+endif
+? "<br><br>"
+
+cc=len(_FILES)
+if cc > 0
+	? "Uploaded _FILES ("+alltrim(str(cc))+")"
+	for i=1 to cc
+		? "<br>" 
+		? "  _files[" + alltrim(str(i)) + "].name="
+		? _files[i].name
+		? "<br>" 
+		? "  _files[" + alltrim(str(i)) + "].tmp_name="
+		? _files[i].tmp_name
+		? "<br>" 
+		? "  _files[" + alltrim(str(i)) + "].type="
+		? _files[i].type
+		? "<br>" 
+		? "  _files[" + alltrim(str(i)) + "].size="
+		? _files[i].size
+		? "<br>" 
+		? "  _files[" + alltrim(str(i)) + "].error="
+		? _files[i].error
+	endfor
+else
+	? "There are no _FILES."
+endif
+? "<br><br>"
+
+cc=len(_POST)
+if cc > 0
+	? "Active POST variables ("+alltrim(str(cc))+")"
+	foreach _post as name=>value 
+		? "<br>   &name="+etos(value)
+	endfor
+else
+	? "There are no POST variables."
+endif
+? "<br><br>"
+// If you have selected any files to upload the _FILES[] associative array contains the name of the uploaded files and their information. 
+// You can just use move_uploaded_file(_FILE[1].tmp_name, _FILE[1].name) to rename the file. 
+// The move_uploaded_file() function will only allow files which do not have any of the following file extensions; 
+//     "exe", "rsp", "prg", "js", "css", "htm", "html". 
+// It will also prefix the target filename with the WWWROOT directory for security reasons.
+? "<br><br>"
+// If the file you uploaded is an image or document you can save it in your database/table using the ObjectRead() function. 
+// See the documentation wiki for details of this function.
+%>
+
+</body>
+</html>
+

@@ -1,0 +1,94 @@
+<%@ Language=Recital %>
+<html>
+
+<%
+private m_libpath
+if isPhoneGap()
+	m_libpath = "js/library"
+elseif isElectron()
+	m_libpath = iif(isElectronDebug(), "file:///library", "file:///resources/app.asar/library")
+else
+	m_libpath = libPath()
+endif
+? "<head>"
+? '<script src="&m_libpath/graphs/RGraph.common.core.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.tooltips.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.effects.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.key.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.thermometer.js"></script>'
+? "</head>"
+%>
+
+<%
+set macros on
+//--
+// graph_thermometer.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_width  = getParameter("width", "150")   
+private m_height = getParameter("height", "400") 
+private m_id     = getParameter("id", "graphCanvas") 
+private m_data = getParameter("data", "0, 100, 14") 
+private m_guttertop = getParameter("guttertop", "25") 
+private m_gutterbottom = getParameter("gutterbottom", "25") 
+private m_gutterleft = getParameter("gutterleft", "50") 
+private m_gutterright = getParameter("gutterright", "60") 
+private m_shadow  = getParameter("shadow", "true") 
+private m_title  = getParameter("title", "Untitled Thermometer Chart") 
+private m_titleforecolor  = getParameter("titleforecolor", "gray") 
+private m_titlebackcolor  = getParameter("titlebackcolor", "") 
+private m_labelsabove  = getParameter("labelsabove", "true") 
+private m_margin  = getParameter("margin", "5")  
+private m_colors  = getParameter("colors", "lightblue") 
+private m_backcolor  = getParameter("backcolor", "#f7f7f7") 
+private m_effects  = getParameter("effects", "true") 
+
+// emit javascript code
+text raw
+<body style="background:&m_backcolor;overflow:hidden;">
+<style>
+.center-div
+{
+     position: relative;
+     margin: auto;
+     top: 0;
+     right: 0;
+     bottom: 0;
+     left: 0;
+     width: &m_width.px;
+     height: &m_height.px;
+}
+</style>
+<div class="center-div">
+<canvas id="&m_id" width="&m_width.px" height="&m_height.px" style="background:&m_backcolor;overflow:hidden;">[No canvas support]</canvas>
+</div>
+<script>
+    window.onload = function ()
+    {
+ 		var effects = &m_effects;
+
+       // Create the Thermometer chart. The arguments are: the canvas ID, the minimum,
+        // the maximum and the indicated value.
+        var chart = new RGraph.Thermometer('&m_id', &m_data);
+        
+        // Configure the thermometer chart to look as you want.
+        chart.Set('chart.gutter.left', &m_gutterleft);
+        chart.Set('chart.gutter.right', &m_gutterright);
+        chart.Set('chart.title.side', '&m_title');
+        chart.Set('chart.colors', ['&m_colors']);
+        //chart.Set('chart.colors', ['rgba(255,0,0,1)']);
+        chart.Set('chart.title.side', '&m_title');
+	    if ('&m_titlebackcolor' != '') chart.Set('chart.text.background', '&m_titlebackcolor');
+	    chart.Set('chart.text.color', '&m_titleforecolor');		
+        
+        // Now call the .Draw() method to draw the chart.
+ 		if (effects) RGraph.Effects.Fade.In(chart);
+	    else chart.Draw();
+   }
+</script>
+
+endtext
+%>
+</body>
+</html>

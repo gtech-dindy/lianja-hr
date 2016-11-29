@@ -1,0 +1,65 @@
+<%@ Language=VFP %>
+<html>
+<head>
+<link rel="stylesheet" href="../../library/bootstrap-3.3.4/css/bootstrap.min.css">
+<script src="../../library/jquery-1.10.2/jquery-1.10.2.min.js" type="text/javascript"></script>
+<script src="../../library/bootstrap-3.3.4/js/bootstrap.min.js" type="text/javascript"></script>
+<style>
+body {
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Arial, Verdana, sans-serif;
+	line-height: 15px;
+	color: #222;
+	font-size:13px;
+	margin:5px;
+	background-color:#fafafa;
+}
+h1 {
+    font-size: 2em;
+    font-weight: 300;
+}
+p, .p {
+    display: block;
+    line-height: 1.5em;
+	margin: 15px;
+}
+.heading {
+	padding:5px;
+	color: #c60;
+}
+.subheading {
+	color: #407EB8;
+	padding:5px;
+}
+
+</style>
+</head>
+<body>
+<h2 class="heading">Building and testing Mobile Apps with PhoneGap</h2>
+<p>PhoneGap/Cordova is fully integrated in with the Lianja App Builder so that you can develop, test and build Mobile&nbsp;
+ Apps in the Lianja App Builder. Apache Cordova provides APIs and packaging tools for creating mobile Apps for Android and iOS devices. These tools are&nbsp;
+ automatically installed when you install Lianja APaaS Developer.</p>
+<h3 class="subheading">Getting Started</h3>
+<p>Firstly you should create a Lianja "Project" in the "Projects" workspace. This will allow you to group together all the resources needed for your Mobile App&nbsp;
+ and will also allow you to specify all the build settings for iOS, Android and WinPhone in the "PhoneGap Build Settings" Tab in the "PhoneGap" workspace.</p>
+<h3 class="subheading">Developing a PhoneGap Mobile App</h3>
+<p>
+You develop a PhoneGap Mobile App in the Lianja App Builder just as you would a Web App. Lianja Mobile Apps are multi-tier client/server Apps. &nbsp;The presentation UI runs on the Mobile device and this is built visually in the App Builder using Lianja Best Practices.  You build Mobile Apps just as you would build an HTML5/JavaScript Web App using JavaScript for any delegates that you write. These delegates run on the mobile device but they can call business procedures that are written in Lianja/VFP or JavaScript on the Lianja Cloud Server. 
+</p>
+<h3 class="subheading">Testing a PhoneGap Mobile App</h3>
+<p>Select the "PhoneGap Live View" Tab at the top of this page for details on how to connect a mobile device in with the Lianja App Builder. </p> 
+<h3 class="subheading">Building a PhoneGap Mobile App</h3>
+<p>PhoneGap is built on top of Cordova. PhoneGap provides a remote building interface at <b>Adobe PhoneGap Build</b> that lets you package up an App in the cloud.&nbsp; 
+If you select the "Adobe PhoneGap Build Service" Tab at the top of this page you can register with Adobe to use the Adobe PhoneGap Build service.</p>
+<p>While PhoneGap makes it easy to package up an App, you still need a certificate and an AppID for each platform/market that you want to&nbsp; 
+distribute your app for, such as Google Play (Android) or the Apple App Store (iOS).</p>
+<p>Lianja App Builder integrates tools to simplify working with PhoneGap and for packaging up and building Apps that can be submitted to the various App stores. You&nbsp;
+ create a project, then specify the settings for "PhoneGap Build Settings" then "Build" your App.</p>
+<p>All of the information needed for the Adobe PhoneGap Build service can be specified in the "PhoneGap Build Settings" Tab. These settings are stored in the "Project" that you&nbsp;
+ create that contains your Mobile Apps.</p>
+<p>You build a mobile App from the "PhoneGap Build Service" Tab at the top of this page</p>
+</body>
+</html>
+
+
+
+ 

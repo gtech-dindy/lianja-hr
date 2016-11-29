@@ -1,0 +1,289 @@
+<%@ Language=VFP %>
+<!DOCTYPE html>
+
+<%
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+set macros on
+set fixed on
+//--
+// treeview.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_database 	= getParameter("database", "southwind")   
+private m_table    	= getParameter("table", "customers") 
+private m_title    	= getParameter("title", "companyname") 
+private m_key    	= getParameter("key", "contactname") 
+private m_groupby  	= getParameter("groupby", "country,region,city") 
+private m_filter  	= getParameter("filter", "") 
+private m_fields  	= getParameter("fields", "*") 
+private m_onclick   = getParameter("onclick", "")
+private m_ondblclick = getParameter("ondblclick", "")
+private m_style  	= getParameter("style", "win8")
+private m_fontsize  = getParameter("fontsize", "16")
+private m_showicons = getParameter("showicons", "true")
+private m_tooltips  = getParameter("tooltips", "true")
+private m_expandall = getParameter("expandall", "false")
+private m_expandfirst = getParameter("expandfirst", "true")
+private m_titlevalue
+private m_keyvalue
+private m_groupvalue
+private m_nextgroup
+private m_nextgroupvalue
+private m_lastgroupvalue 
+private m_tmpfile
+private m_orderby
+private m_groups
+private m_groupnum
+private m_group
+private m_groupinc
+private m_groupcount
+private m_first
+private m_lineheight = val(m_fontsize) + 4;
+
+%>
+
+<html>
+
+<head>
+
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+<%
+
+if isServer() or .t.
+	? '<script src="../../library/jquery-1.11.2/jquery-1.11.2.min.js" type="text/javascript"></script>'
+	? '<script src="../../library/jquery-ui-1.11.3/jquery-ui.min.js" type="text/javascript"></script>'
+	? '<link href="../../library/jquery-ui-1.11.3/jquery-ui.css" rel="stylesheet" type="text/css">'
+	? '<link href="../../library/fancytree/dist/skin-&m_style/ui.fancytree.css" rel="stylesheet" type="text/css">'
+	//? '<link rel="stylesheet" href="../../library/bootstrap/css/bootstrap.min.css">'
+	//? '<script src="../../library/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>'
+	? '<script src="../../library/fancytree/dist/jquery.fancytree-all.js" type="text/javascript"></script>'
+else
+	? '<script src="lib:/jquery-1.11.2/jquery-1.11.2.min.js" type="text/javascript"></script>'
+	? '<script src="lib:/jquery-ui-1.11.3/jquery-ui.min.js" type="text/javascript"></script>'
+	? '<link href="lib:/jquery-ui-1.11.3/jquery-ui.css" rel="stylesheet" type="text/css">'
+	? '<link href="lib:/fancytree/dist/skin-&m_style/ui.fancytree.css" rel="stylesheet" type="text/css">'
+	//? '<link rel="stylesheet" href="lib:/bootstrap/css/bootstrap.min.css">'
+	//? '<script src="lib:/bootstrap/js/bootstrap.min.js" type="text/javascript"></script>'
+	? '<script src="lib:/fancytree/dist/jquery.fancytree-all.js" type="text/javascript"></script>'
+endif
+
+
+text raw
+
+<style>
+
+.fancytree-container {
+	position:absolute !important;
+	top:0px; 
+	bottom:2px; 
+	left:0px; 
+	right:0px;
+	border: 0px !important;
+	font-family: Sans Serif;
+	font-size: &m_fontsize.px !important;
+	line-height: &m_lineheight.px !important;
+	margin:15px;
+}
+
+.fancytree-treefocus {
+	border: 0px !important;
+}
+
+</style>
+
+<script>
+var treedata = [];
+var treenode = "";
+var parentnode;
+
+//--------------------------------------------------------------------------------
+function callDelegate(delegate, title, key)
+{
+	if (delegate == "") return;
+	// see if there is a JavaScript delegate and if not evaluate on the server
+	try
+	{
+		if (Lianja.isDevMode())
+		{
+			var expr = "javascript:" + delegate + "(\"" + (title) + "\",\"" + (key) + "\");";
+			Lianja.writeOutput(expr);
+			var result = Lianja.evaluate(expr);
+			if (typeof result === 'string' && result == 'error: undefined function')
+			{
+				throw "error";
+			}
+		}
+		else
+		{
+			var expr = delegate + "(\"" + (title) + "\",\"" + (key) + "\");";
+			Lianja.writeOutput(expr);
+			eval("window.parent." + expr);
+		}
+	}
+	catch (e)
+	{
+	}
+}
+</script>
+
+</head>
+
+<body>
+  <div style="position:absolute;top:0px; bottom:0px; left:0px; right:0px;">
+  <div id="tree" style="padding:5px;position:absolute;top:0px; bottom:0px !important; left:0px; right:0px;overflow:hidden;">
+  
+endtext
+
+save datasession
+open database &m_database
+
+// perform the query
+if len(m_filter) > 0
+	m_filter = "where "+m_filter
+endif
+
+// construct sql statement
+if len(m_groupby) = 0
+	m_orderby = ""
+else
+	m_orderby = "order by &m_groupby"
+endif
+
+// perform the SQL query
+m_tmpfile = sys(2015)	
+select &m_fields from &m_table &m_filter &m_orderby save as "&m_tmpfile"
+use "&m_tmpfile" in 0 current
+
+// init tree node grouping
+m_groups = explode(",", m_groupby)
+m_lastgroupvalue = ""
+m_groupnum = 1
+m_groupcount = alen(m_groups)
+
+%>
+
+<script>
+var treenodes = new Array( &m_groupcount );
+var treenodevalues = new Array( &m_groupcount );
+</script>
+
+<%
+		
+scan
+	m_titlevalue = str_replace('"', '\"', alltrim(etos(&m_title)))
+	m_keyvalue = str_replace('"', '\"', alltrim(etos(&m_key)))
+	for m_groupnum=1 to m_groupcount
+		m_group = m_groups[ m_groupnum ]
+		m_groupvalue = alltrim(etos(&m_group))
+		text raw
+			<script>
+			if ("&m_groupvalue" !== treenodevalues[ &m_groupnum - 1 ] )
+			{
+				treenode = { title: "&m_groupvalue", folder: true, children: [] };
+				if (&m_groupnum !== 1)
+				{
+					if (typeof treenodes[ &m_groupnum - 2 ] !== 'undefined')
+					{
+						parentnode = treenodes[ &m_groupnum - 2 ];
+						parentnode.children.push(treenode);
+					}
+					else
+					{
+						treedata.push(treenode);
+					}
+				}
+				else
+				{
+					treedata.push(treenode);
+				}
+				parentnode = treenode;
+				treenodes[ &m_groupnum - 1 ] = parentnode;
+				treenodevalues[ &m_groupnum - 1 ] = "&m_groupvalue";
+				for (var j=&m_groupnum; j<&m_groupcount; ++j) treenodevalues[j] = "";
+			}
+			if (&m_groupnum === &m_groupcount)
+			{
+				treenode = { title: "&m_titlevalue", key: "&m_keyvalue" };
+				parentnode.children.push(treenode);
+			}
+			</script>
+		endtext
+	endfor
+endscan
+
+use
+erase "&m_tmpfile"
+restore datasession
+%>
+
+</div>
+</div>
+
+<%
+text raw
+	<script>
+    $("#tree").fancytree(
+    {
+	  extensions: ["glyph", "edit", "wide"],
+      checkbox: false,
+      source: treedata,
+      selectMode: 2,
+      icons: &m_showicons,
+      click: function(event, data) {
+        var node = data.node;
+      	if (node.isFolder()) return true;
+        callDelegate("&m_onclick", node.title, node.key);
+		return true;
+      },
+      dblclick: function(event, data) {
+        var node = data.node;
+      	if (node.isFolder()) return true;
+        callDelegate("&m_ondblclick", node.title, node.key);
+		return true;
+      },
+	  glyph: {
+		map: {
+			doc: "glyphicon glyphicon-file",
+			docOpen: "glyphicon glyphicon-file",
+			checkbox: "glyphicon glyphicon-unchecked",
+			checkboxSelected: "glyphicon glyphicon-check",
+			checkboxUnknown: "glyphicon glyphicon-share",
+			error: "glyphicon glyphicon-warning-sign",
+			expanderClosed: "glyphicon glyphicon-plus-sign",
+			expanderLazy: "glyphicon glyphicon-plus-sign",
+			expanderOpen: "glyphicon glyphicon-minus-sign",
+			folder: "glyphicon glyphicon-folder-close",
+			folderOpen: "glyphicon glyphicon-folder-open",
+			loading: "glyphicon glyphicon-refresh"
+		  }
+		},
+		wide: {
+			iconWidth: "1em",     
+			iconSpacing: "0.5em", 
+			levelOfs: "1.5em"     
+		},      
+    });
+
+	if ("&m_expandall" === "true")
+	{
+		$("#tree").fancytree("getRootNode").visit(function(node){
+        	node.setExpanded(true);
+      	});	
+	}
+	document.onselectstart = function() { return false; };    
+	$(document).ready(function(){
+		setTimeout(function() {
+			$('body').css('display', 'none').height();
+			$('body').css('display', 'block');
+		}, 0);
+	});
+	</script>
+endtext
+%>
+
+</body>
+</html>
+

@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<title>Welcome to Lianja Cloud Server</title>
+<style>
+  ul{margin-left: 15px;}
+  .clsHeading {font-family: verdana; color: black; font-size: 11; font-weight: 800; width:300; }  
+  .clsEntryText {font-family: verdana; color: black; font-size: 11; font-weight: 400; background-color:#FFFFFF;}    
+  .clsWarningText {font-family: verdana; color: #B80A2D; font-size: 11; font-weight: 600; width:600;  background-color:#EFE7EA;}  
+  .clsCopy {font-family: verdana; color: black; font-size: 11; font-weight: 400;  background-color:#FFFFFF;}  
+h1 {
+	font-family: 'Segoe UI', 'Calibri', 'Century Gothic', 'Courier New';
+	text-align: center;
+	margin: 0;
+	padding: 0.6em 2em 0.4em;
+	background-color: #3f3f3f;
+	color: #ffffff;
+	font-weight: bold;
+	border-bottom: 2px solid orange;
+	font-size: 24px;
+    	color: white; 
+    	font-smooth: always;
+    	text-shadow: 0 0 1px rgba(255,255,255,0.3);
+}
+#mainbody
+{
+	background: url(images/background.png);
+}
+</style>
+</head>
+
+<body id="mainbody" topmargin="3" leftmargin="0" marginheight="0" marginwidth="0" bgcolor="#FFFFFF" link="#000066" vlink="#000000" alink="#0000FF" text="#000000">
+<h1>
+Lianja&#8482; Cloud Server test page
+</h1>
+<br>
+<div style="margin:10; color:white;">
+<center>
+This page is used to test the proper operation of the Lianja Cloud Server after it has been installed.
+</center>
+</div>
+<p>
+  <div style="text-align:center;position:absolute; top:150px;left:20%;right:20%;zindex:100;background-color:#acacac;color:white;padding:15px;border:1px solid white;">
+        <p>
+  <b>The Lianja Cloud Server is running on this machine.</b>
+	</p>
+  <p>You do not currently have a default page established for your
+  users.<br>Any users attempting to connect to this server will receive this page.<br><br>
+  Lianja Cloud Server uses the default.rsp file as its startup page.<br><br>You should replace this page with your own default.rsp page.<br><br>
+  To add pages to your Lianja Team website, copy your files into:<br><br> c:\lianja\cloudserver\tenants\public\wwwroot\ on Windows<br><br>/opt/lianja/cloudserver/tenants/public/wwwroot/ on Linux.<br><br>
+	</p>
+  </div>
+<div style="font-size:small;color:#999;width:100%;text-align:center;position:absolute;bottom:5px;">
+<center>
+Powered by Lianja&#8482;. Copyright&copy; 2016 <a style="color:#999;" href="http://www.lianja.com">Lianja Inc.<a> All Rights Reserved Worldwide.
+<center>
+</div>
+</body>
+</html>

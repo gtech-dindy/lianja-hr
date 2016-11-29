@@ -1,0 +1,134 @@
+<%@ Language=Recital %>
+<html>
+
+<%
+private m_libpath
+if isPhoneGap()
+	m_libpath = "js/library"
+elseif isElectron()
+	m_libpath = iif(isElectronDebug(), "file:///library", "file:///resources/app.asar/library")
+else
+	m_libpath = libPath()
+endif
+? "<head>"
+? '<script src="&m_libpath/graphs/RGraph.common.core.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.tooltips.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.effects.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.key.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.rose.js"></script>'
+? "</head>"
+%>
+
+<%
+set macros on
+//--
+// graph_rose.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_width  = getParameter("width", "760") 
+private m_height = getParameter("height", "500") 
+private m_id     = getParameter("id", "graphCanvas") 
+private m_data = getParameter("data", "3,3,41,37,16") 
+private m_labels = getParameter("labels", "'Safari (3%)', 'Other (3%)', 'MSIE 7 (41%)', 'MSIE 6 (37%)', 'Firefox (16)'") 
+private m_keylabels = getParameter("keylabels", "Safari,Other,MSIE 7,MSIE 6,Firefox") 
+private m_guttertop = getParameter("guttertop", "25") 
+private m_gutterbottom = getParameter("gutterbottom", "25") 
+private m_gutterleft = getParameter("gutterleft", "160") 
+private m_gutterright = getParameter("gutterright", "60") 
+private m_shadow  = getParameter("shadow", "true") 
+private m_title  = getParameter("title", "Untitled Rose Chart") 
+private m_titleforecolor  = getParameter("titleforecolor", "gray") 
+private m_titlebackcolor  = getParameter("titlebackcolor", "") 
+private m_labelsabove  = getParameter("labelsabove", "true") 
+private m_margin  = getParameter("margin", "5") 
+private m_colors  = getParameter("colors", "#eef, #ddf, #ccf, #bbf, #bbb") 
+private m_backcolor  = getParameter("backcolor", "#f7f7f7") 
+
+// emit javascript code
+text raw
+<body style="background:&m_backcolor;overflow:hidden;">
+<style>
+.center-div
+{
+     position: relative;
+     margin: auto;
+     top: 0;
+     right: 0;
+     bottom: 0;
+     left: 0;
+     width: &m_width.px;
+     height: &m_height.px;
+}
+</style>
+<div class="center-div">
+<canvas id="&m_id" width="&m_width.px" height="&m_height.px" style="background:&m_backcolor;overflow:hidden;">[No canvas support]</canvas>
+</div>
+<script>
+    window.onload = function ()
+    {
+	    var colors = "&m_colors";
+	    var labels = [&m_labels];
+ 	    var tooltips = [];
+    	var i;
+	    var keylabels = "&m_keylabels";
+    
+	    for (i=0; i<labels.length; ++i) tooltips.push(labels[i]);
+
+    	colors = colors.split(",");
+	   	keylabels = keylabels.split(",");
+
+        // The data to be shown on the Rose chart.
+        var data = [&m_data];
+        
+        // To show a stacked Rose chart you specify the data like this. non-equi-angular
+        // Rose charts are very similar to this but with only two elements to
+        // each array - the magnitude of the segment and the size of the angle.
+        // var rose = new RGraph.Rose('myRose', [[4,5], [6,8], [4,3]]);
+    
+        // Create the rose chart.
+        var chart = new RGraph.Rose('&m_id', data);
+        
+        // Configure the chart to look as you want.
+  		chart.Set('chart.key.position.x', chart.canvas.width - &m_gutterright - 60);
+        chart.Set('chart.key.position.y', &m_guttertop);
+        chart.Set('chart.key.linewidth', 0.001);
+        chart.Set('chart.key.background', 'rgba(0,0,0,0)');
+        chart.Set('chart.key.colors', colors);
+        chart.Set('chart.key', keylabels); 
+        chart.Set('chart.labels', [&m_labels]);
+        chart.Set('chart.labels', [&m_labels]);
+       	chart.Set('chart.gutter.left', &m_gutterleft);
+    	chart.Set('chart.gutter.right', &m_gutterright);
+    	chart.Set('chart.gutter.top', &m_guttertop);
+    	chart.Set('chart.gutter.bottom', &m_gutterbottom);
+    	chart.Set('chart.shadow', &m_shadow);       
+ 	    chart.Set('chart.title', '&m_title');
+	    if ('&m_titlebackcolor' != '') chart.Set('chart.title.background', '&m_titlebackcolor');
+	    chart.Set('chart.title.color', '&m_titleforecolor');		
+	    chart.Set('chart.colors.sequential', true);
+	    chart.Set('chart.colors', colors);
+       
+        // Now call the .Draw() method to draw the chart.
+		chart.Set('chart.tooltips', tooltips);
+		chart.Set("chart.tooltips.event", "onclick");
+        chart.Draw();
+        
+		// the click_handler will get called when a bar is clicked on
+		// if this is running inside a webview then an event is dispatched back into
+		// the Lianja runtime
+		function click_handler(canvas, text, x, y, idx)
+	    {
+	        if (typeof(Lianja)=="object")
+	        {
+	        	Lianja.writeLog("Clicked " + labels[idx]);
+	        	Lianja.dispatchEvent("Click", labels[idx]);
+		    }
+	    }  
+	    chart.Set('chart.tooltips.override', click_handler);        
+    }
+</script>
+endtext
+%>
+</body>
+</html>

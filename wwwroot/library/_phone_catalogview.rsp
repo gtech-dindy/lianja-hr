@@ -1,0 +1,290 @@
+<%@ Language=Recital %>
+<html>
+<head>
+<%
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+set macros on
+set fixed on 
+private m_libpath, m_libpath2
+if isPhoneGap()
+	m_libpath = "js/library"
+else
+	m_libpath = "../../library/"
+endif
+? '<link rel="stylesheet" href="&m_libpath/catalogview.css">'
+//? '<link rel="stylesheet" href="&m_libpath/bootstrap-3.3.4/css/bootstrap.min.css">'
+//? '<script src="&m_libpath/jquery-1.10.2/jquery-1.10.2.min.js" type="text/javascript"></script>'
+//? '<script src="&m_libpath/bootstrap-3.3.4/js/bootstrap.min.js" type="text/javascript"></script>'
+%>
+</head>
+
+<body>
+
+<%
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+set macros on
+set fixed on
+//--
+// phone_catalogview.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private database   = getParameter("database", "southwind")   
+private table      = getParameter("table", "employees") 
+private heading    = getParameter("heading", "") 
+private cellfooter = getParameter("cellfooter", "") 
+private cellfootertarget = getParameter("cellfooterlink", "") 
+private cellfooterkey = getParameter("cellfooterkey", "") 
+private image      = getParameter("image", "") 
+private imagewidth = getParameter("imagewidth", "200px") 
+private imageheight= getParameter("imageheight", "200px") 
+private caption    = getParameter("caption", "'No caption specified'") 
+private subcaption = getParameter("subcaption", "") 
+private captiontarget = getParameter("captionlink", "") 
+private captionkey = getParameter("captionkey", "") 
+private details    = getParameter("details", "'No details specified'") 
+private filter     = getParameter("filter", "") 
+private gridlines  = getParameter("gridlines", "true") 
+private orderby    = getParameter("orderby", "")  
+private columns    = getParameter("columns", "1")  
+private readmore    = getParameter("readmore", "false")  
+private readmoresize= getParameter("readmoresize", "0")  
+private readmoresearchkey = getParameter("readmoresearchkey", "''")  
+private readmorelink = getParameter("readmorelink", "")  
+private targetui = getParameter("targetui", "web")  
+//--
+// private variables
+//--
+private m_key
+private m_recno
+private m_tag
+private m_selected
+private m_target
+
+if targetui = "phone"
+	columns = 1
+	readmorelink = ""
+	readmore = "false"
+	readmoresize = "0"
+endif
+
+// open the database
+if len(database())=0
+	open database &database
+endif
+
+// open the table so we can save context
+m_recno = 0
+m_tag = ""
+m_selected = select()
+if used("&table")
+	select &table
+	m_tag = tag()
+	m_recno = recno()
+else
+	use &table in 0 current
+endif
+
+// perform the query
+if len(filter) > 0
+	filter = "where "+filter
+endif
+
+// construct sql statement
+if len(orderby) = 0
+	orderby = ""
+else
+	orderby = "order by &orderby"
+endif
+
+tmpfile = sys(2015)	
+select * from &table &filter &orderby save as "&tmpfile"
+use "&tmpfile" in 0 current
+
+// declare some special symbols (html uses ampersand so do we for macros)	
+amp = chr(38) 
+nbsp = amp + "nbsp;"   
+
+// generate the html output 
+? '<table width="100%" cellpadding="0" cellspacing="0" bgcolor="white" border="0">' 
+if len(heading) > 0
+	? '<caption class="headingcaption">&heading</caption>'  
+endif 
+
+m_count = reccount()
+	
+// scan through the records generating the html table rows and columns
+goto top
+     
+// for all records... 	   
+for i=1 to m_count
+	if eof()
+		exit
+	endif
+	if i > 1
+		? '<tr>' + replicate('<td>&nbsp</td><td></td>', &columns) + '</tr>'
+		? '<tr class="headingbottomborder">' + replicate('<td></td><td></td>', &columns) + '</tr>'
+	endif	 
+	? '<tr>' + replicate('<td>&nbsp</td><td></td>', &columns) + '</tr>'
+	? '<tr valign=top>'	
+	
+	// now display the cells
+	for j=1 to &columns
+		? '<td style="padding:5px;">'
+		if len(image)>0	
+			// Create a unique temporary name (guaranteed uniqueness across concurrent users in a network)
+			m_tmpnam = tmpnam()
+			// Extract the photo from the database and write it to the temporary file
+			objectWrite(m_tmpnam, &image)
+			// Generate the base64 encoded contents as an IMG tag and output into as HTML 
+			if len(captiontarget) > 0
+				if len(captionkey) > 0
+					m_key = &captionkey
+					set macros off
+					m_target = captiontarget + "?action=search&text=" + m_key
+					set macros on
+				else
+					m_target = captiontarget
+				endif
+				? [<a href="javascript:Lianja.showDocument('] + m_target + [')">] 
+			endif
+			if len(objectType(&image)) > 0
+				base64_encode_file(m_tmpnam, objectType(&image), "&imagewidth", "&imageheight")
+			endif
+			if len(captiontarget) > 0
+				?  [</a>]
+			endif
+			
+			// Don't forget to remove the temporary file
+			erase &m_tmpnam	
+		else
+			?? "No image specified"
+		endif	
+		? "</td>"
+		if targetui = "phone"
+			? "</tr>"
+			? "<tr>"
+		endif
+		
+		? '<td style="padding:5px;" >'	
+		? '<table cellpadding="5px" cellspacing="0" bgcolor="white" border="0">'  		
+		? '<tr>'
+		? '<td class="tablecaption" align="left">'
+		if len(captiontarget) > 0
+			if len(captionkey) > 0
+				m_key = &captionkey
+				set macros off
+				m_target = captiontarget + "?action=search&text=" + m_key
+				set macros on
+			else
+				m_target = captiontarget
+			endif
+			? [<a href="javascript:Lianja.showDocument('] + m_target + [')">] + &caption + [</a>]
+		else
+			? &caption
+		endif	
+
+		if len(subcaption) > 0
+			? '<div class="headingsubcaption">'
+			? &subcaption
+			? '</div>'
+		endif	
+		? '</td>'
+		? '</tr>'
+		
+		? '<tr>'
+		if &columns > 1
+			m_td_style = 'style="max-width:500; word-break:break-word;"'
+		else
+			m_td_style = ''
+		endif
+		
+		if val(readmoresize) > 0
+			m_p_style = 'style="height:&readmoresize.em;overflow-y:hidden;"'
+			? '<td class="tabledetails" align="left" &m_td_style>'
+			? '<div &m_p_style>'
+			? &details
+			? '</div>'
+		else
+			m_p_style = ''
+			? '<td class="tabledetails" align="left" &m_td_style>'
+			? '<div &m_p_style>'
+			? &details
+			? '</div>'
+		endif
+				
+		if readmore = "true"
+			if len(readmoresearchkey) > 0
+				m_key = &readmoresearchkey
+				set macros off
+				if at("||", readmorelink) > 0
+					astore(m_target_array, readmorelink, "||")
+					m_target_array[1] = m_target_array[1] + "?action=search&text=" + alltrim(m_key)
+					m_target = astring(m_target_array, "||")
+				else
+					m_target = readmorelink + "?action=search&text=" + m_key
+				endif
+				set macros on
+			else
+				m_target = readmorelink
+			endif
+			? [<a href="javascript:Lianja.showDocument('] + m_target + [')"><br>Read more...</a>]
+		endif	
+		? '</td>'
+		? '</tr>'
+		
+		if len(cellfooter) > 0
+			? '<tr>'
+			? '<td class="cellfooterlink">'
+			if len(cellfootertarget) > 0
+				if len(cellfooterkey) > 0
+					m_key = &cellfooterkey
+					set macros off
+					m_target = cellfootertarget + "?action=search&text=" + m_key
+					set macros on
+				else
+					m_target = cellfootertarget
+				endif
+				? [<a href="javascript:Lianja.showDocument('] + m_target + [')">] +cellfooter + [</a>]
+			else
+				? &cellfooter
+			endif
+			? '</td>'
+			? '</tr>'
+		endif
+	
+		? '</table>'
+		
+		? '</td>'
+		? '</tr>'
+			
+		skip
+		if eof()
+			exit
+		endif		
+	next
+	? '</tr>' 
+next  
+
+? '</table>'
+
+// delete temporary files
+use
+erase '&tmpfile..dbf'
+erase '&tmpfile..dbt'
+
+// restore record position as the table may be open in many places
+if m_recno <> 0
+	select &table
+	if not empty(m_tag)
+		set order tag &m_tag
+	endif
+	goto &m_recno
+endif
+
+// reselect cursor that was active on entry
+select &m_selected 
+
+%>
+</body>
+</html>

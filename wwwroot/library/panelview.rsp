@@ -1,0 +1,386 @@
+<%@ Language=VFP %>
+<html>
+<head>
+<%
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+set macros on
+set fixed on 
+private m_libpath
+if isPhoneGap()
+	m_libpath = "js/library"
+elseif isElectron()
+	m_libpath = iif(isElectronDebug(), "file:///library", "file:///resources/app.asar/library")
+else
+	m_libpath = libPath()
+endif
+? '<link rel="stylesheet" href="&m_libpath/bootstrap-3.3.4/css/bootstrap.min.css">'
+? '<script src="&m_libpath/jquery-1.10.2/jquery-1.10.2.min.js" type="text/javascript"></script>'
+? '<script src="&m_libpath/bootstrap-3.3.4/js/bootstrap.min.js" type="text/javascript"></script>'
+? '<script>var panelurls = [];</script>'
+text raw
+<script>
+if (typeof LianjaAppBuilder === 'undefined')
+{
+	window.LianjaAppBuilder = window.parent.LianjaAppBuilder;
+}
+</script>
+endtext
+%>
+</head>
+<body style="overflow:hidden;">
+<%
+proc emitMenuItem(menuitem, menupath, index)
+	private amenuitems
+	private amenuitemlen
+	private submenu
+	private menupad
+	private menudelegate
+	private i
+	private mpath
+	private delegate = [javascript:dispatchDelegate('{1}', {2}, this)]
+	if "(" $ menuitem and endsWith(menuitem, ")")
+		submenuitems = substr(menuitem, indexOf(menuitem, "(")+1, len(menuitem)-1)
+		submenuitems = substr(submenuitems, 2, len(submenuitems)-2)
+		menupad = substr(menuitem, 1, indexOf(menuitem, "("))
+		amenuitems = explode(",", submenuitems)
+		amenuitemlen = alen(amenuitems)
+		text raw
+			<li class="dropdown">
+			<a style="cursor: pointer; cursor: hand;" href="#" class="dropdown-toggle" data-toggle="dropdown">&menupad<b class="caret"></b></a>
+			<ul class="dropdown-menu" role="menu">
+		endtext
+		for i=1 to amenuitemlen
+			menuitem = amenuitems[i]
+			if len(menupath)=0
+				mpath = menupad
+			else
+				mpath = menupath+"|"+menupad
+			endif
+			emitMenuItem(menuitem, mpath, index+1)
+		endfor
+		text raw
+			</ul>
+			</li>
+		endtext
+	else
+		if menuitem = "-"
+			text raw
+		        <li class="divider"></li>
+			endtext
+		else
+			if len(menupath)=0
+				mpath = menuitem
+			else
+				mpath = menupath+"|"+menuitem
+			endif
+			menudelegate = str_replace("{1}", lower(mpath), delegate)
+			menudelegate = str_replace("{2}", etos(index), menudelegate)
+			text raw
+		        <li>
+		        	<a style="cursor: pointer; cursor: hand;" onclick="&menudelegate">&menuitem</a>
+			    </li>
+			endtext
+		endif
+	endif
+endproc
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+set macros on
+set fixed on 
+//--
+// panelview.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private panels  	= getParameter("panels", "") 
+private captions  	= getParameter("captions", "") 
+private subcaptions	= getParameter("subcaptions", "") 
+private interval 	= getParameter("interval", "0")
+private menu     	= base64_decode(getParameter("menu", ""))   
+private delegate 	= getParameter("delegate", "")   
+private showcontrols = getParameter("showcontrols", "false")   
+private showindicators = getParameter("showindicators", "false")   
+private autorefresh = getParameter("autorefresh", "false")   
+private autoselect = getParameter("autoselect", "false")   
+private id  		= getParameter("id", "page1-section1") 
+private apanels
+private m_panelurl
+private m_panels = 0
+if len(panels) > 0 
+	apanels = explode(",", panels)
+	m_panels = alen(apanels)
+endif
+private acaptions
+private m_captions = 0
+if len(captions) > 0 
+	if '|' $ captions
+		acaptions = explode("|", captions)
+	else
+		acaptions = explode(",", captions)
+	endif
+	m_captions = alen(acaptions)
+endif
+private asubcaptions
+private m_subcaptions = 0
+if len(subcaptions) > 0
+	if '|' $ subcaptions
+		asubcaptions = explode("|", subcaptions)
+	else
+		asubcaptions = explode(",", subcaptions)
+	endif
+	m_subcaptions = alen(asubcaptions)
+	endif
+private m_active
+if "&interval" = "0"
+	interval = "false"
+else
+	interval = int(val(interval))*1000
+endif
+private m_delegate = [javascript:dispatchDelegate('{1}', {2}, this)]
+text raw
+<script>
+function setActiveMenuItem(aobj)
+{
+	var li = $(aobj).parent();
+	var ul = $(li).parent();
+  	$( ul ).find( "li" ).removeClass( "active" );
+	$( li ).addClass("active");	
+};
+function dispatchDelegate(menupath, index, aobj)
+{
+	if ("&autoselect" === "true")
+	{
+		setActiveMenuItem(aobj);
+		doMethod(""+index);
+		return;
+	}
+
+	if ("&delegate" == "") return;
+
+	setActiveMenuItem(aobj);
+		
+	try
+	{
+		if (Lianja.isDevMode())
+		{
+			var result = Lianja.evaluate("javascript:&delegate('" + menupath + "');");
+			if (typeof result === 'string' && result == 'error: undefined function')
+			{
+				throw "error";
+			}
+		}
+		else
+		{
+			eval("window.parent.parent.&delegate('" + menupath + "')");
+		}
+	}
+	catch (e)
+	{
+		Lianja.evaluate("&delegate('" + menupath + "')");
+	}
+};
+</script>
+endtext
+
+if len(menu)>0
+	private amenu
+	private i
+	private amenulen
+	private menuitem
+	private menudelegate
+	private menupath
+	if "|" $ menu
+		amenu = explode("|", menu)
+	else
+		amenu = explode(",", menu)
+	endif
+	amenulen = alen(amenu)
+	text raw
+		<nav class="navbar navbar-inverse" style="border-radius:0px !important;">
+		<div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+	endtext
+	for i=1 to amenulen
+		menuitem = amenu[i]
+		if i = 1
+			menudelegate = str_replace("{1}", lower(menuitem), m_delegate)
+			menudelegate = str_replace("{2}", etos(i), menudelegate)
+			text raw
+		        <li class="active">
+		        	<a style="cursor: pointer; cursor: hand;" onclick="&menudelegate">&menuitem</a>
+			    </li>
+			endtext
+		else
+			if startsWith(menuitem, ">")
+				menuitem = substr(menuitem, 2)
+				menudelegate = str_replace("{1}", lower(menuitem), m_delegate)
+				menudelegate = str_replace("{2}", etos(i), menudelegate)
+				text raw
+     				</ul>
+					<ul class="nav navbar-nav navbar-right">
+        				<li>
+        					<a style="cursor: pointer; cursor: hand;" onclick='&menudelegate'>&menuitem</a>
+    					</li>
+      				</ul>
+     			endtext
+			else
+				emitMenuItem(menuitem, "", i)
+			endif
+		endif
+	endfor
+	text raw
+			  </ul>
+		    </div><!-- /.navbar-collapse -->
+		  </div><!-- /.container-fluid -->
+		  </nav>
+	endtext	
+	? [<div id="myCarousel" class="carousel slide" data-ride="carousel" style="position:absolute;width:100%;bottom:0px;top:52px;" data-interval="&interval">]
+else
+? [<div id="myCarousel" class="carousel slide" data-ride="carousel" style="width:100%;height:100%;" data-interval="&interval">]
+endif
+
+if showindicators = "true"
+	  ? '<ol class="carousel-indicators">'
+	  for i=0 to m_panels-1
+	  	if i = 0
+	  		m_active = "active"
+	  	else
+			m_active = ""
+		endif
+	    ? '<li data-target="#myCarousel" data-slide-to="&i" class="&m_active"></li>'
+	  endfor
+	  ? '</ol>'
+endif
+	
+%>
+  <!-- Wrapper for panels -->
+  <div class="carousel-inner" role="listbox" style="height:100%;">
+  <%
+  for i=1 to m_panels
+  	if i = 1
+	  	m_active = "active"
+	else
+		m_active = ""
+	endif
+    ? '<div class="item &m_active" style="width:100%;height:100%;">'
+    if '.rsp' $ apanels[i] or '.jssp' $ apanels[i] 
+    	m_panelurl = apanels[i]
+    	? "<script>panelurls.push('&m_panelurl');</script>"
+		? "<iframe id='panel" + alltrim(etos(i)) + "' width='100%' height='100%' frameborder='0' scrolling='no'></iframe>"
+    else
+		base64_encode_file(apanels[i], "jpg", "", "", "style='width:100%;height:100%;'")
+	endif
+    if m_captions >= i
+    	? '<div class="carousel-caption">'
+    	? '<h3>' + acaptions[i] + '</h3>'
+    	if m_subcaptions >= i
+    		? '<p>' + asubcaptions[i] + '</p>'
+		endif
+    	? '</div>'
+	endif
+    ? '</div>'
+  endfor
+  ? '</div>'
+  if showcontrols = "true"
+  	text raw
+	  <!-- Left and right controls -->
+	  <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+	    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+	    <span class="sr-only">Previous</span>
+	  </a>
+	  <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+	    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+	    <span class="sr-only">Next</span>
+	  </a>
+	endtext
+  endif
+%>
+
+</div>
+<script>
+<%
+text raw
+$(document).ready(function(){
+    $('.carousel').carousel();
+});
+var m_panels = &m_panels;
+document.onselectstart = function() { return false; };
+function doMethod(cmd)
+{
+	if (cmd == "next" || cmd == "prev" || cmd == "cycle")
+	{
+		;
+	}
+	else
+	{
+		var y = parseInt(cmd);
+		if (!isNaN(y)) 
+		{
+			cmd = y-1;
+			if (&autorefresh)
+			{
+				loadContent($('#panel'+y), panelurls[y-1]);
+			}
+		}
+	}
+	$(".carousel").carousel(cmd);
+};
+function loadContent(frame, targeturl)
+{
+	if (typeof LianjaAppBuilder === 'object')
+	{
+		var text = LianjaAppBuilder.fetchBaseUrl("", targeturl);
+		var doc = frame[0].contentDocument;
+		doc.open();
+		doc.write(text);
+		doc.close();
+	}
+	else if (typeof Lianja.fetchBaseUrl !== 'undefined')
+	{
+		var text = Lianja.fetchBaseUrl("", targeturl);
+		var doc = frame[0].contentDocument;
+		doc.open();
+		doc.write(text);
+		doc.close();
+	}
+	else
+	{
+		Lianja.getUrl(targeturl, {}, function(status, text) {
+			if (status)
+			{
+				var doc = frame[0].contentDocument;
+				doc.open();
+				doc.write(text);
+				doc.close();
+			}
+		});
+	}
+};
+for (i=1; i<=m_panels; ++i)
+{
+	loadContent($('#panel'+i), panelurls[i-1]);
+}
+try
+{
+	if ("&autoselect" === "false")
+	{
+		Lianja.registerMethodHandler("&id", doMethod);
+	}
+}
+catch (e)
+{
+}
+endtext
+%>
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<%@ Language=VFP %>
+<html>
+<head>
+<script>
+// Get a reference to the Lianja object in the parent window so we can manipulate the LOM and navigate pages in the App
+if (typeof window.parent !== 'undefined' && typeof window.parent.Lianja !== 'undefined')
+{
+	window.Lianja = window.parent.Lianja;
+}
+</script>
+</head>
+<body>
+<%
+	private m_employeeid = getParameter("employeeid", "1")
+	private m_tmpnam
+	private m_image = "employees.photo"
+	private m_notes = "employees.notes"
+	
+	if m_employeeid = "undefined"
+		m_employeeid = 1
+	endif
+	
+	// This is only needed when running in Desktop App View
+	save datasession
+	
+	open database southwind
+	use employees order employeeid
+	seek &m_employeeid
+	m_tmpnam = tmpnam()
+	objectWrite(m_tmpnam, &m_image)
+	? "<div style='width:100%;height:400px'>"
+	base64_encode_file(m_tmpnam, objectType(&m_image), "100%", "100%")
+	delete file "&m_tmpnam"
+	? "<div>"
+	? &m_notes
+	
+	// This is only needed when running in Desktop App View
+	restore datasession
+	
+%>
+</body>
+</html>

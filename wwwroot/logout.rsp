@@ -1,0 +1,6 @@
+<%@ Language=VFP %>
+<%
+response.logout()
+response.redirect("login.rsp")
+%>
+

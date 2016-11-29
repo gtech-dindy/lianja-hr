@@ -1,0 +1,518 @@
+<%@ Language=Recital %>
+<html>
+<head>
+<%
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+set macros on
+set fixed on 
+private m_libpath
+if isPhoneGap()
+	m_libpath = "js/library"
+elseif isElectron()
+	m_libpath = iif(isElectronDebug(), "file:///library", "file:///resources/app.asar/library")
+else
+	m_libpath = "../../library"
+endif
+? '<link rel="stylesheet" href="&m_libpath/catalogview.css">'
+? '<link rel="stylesheet" href="&m_libpath/bootstrap-3.3.4/css/bootstrap.min.css">'
+? '<script src="&m_libpath/jquery-1.10.2/jquery-1.10.2.min.js" type="text/javascript"></script>'
+? '<script src="&m_libpath/bootstrap-3.3.4/js/bootstrap.min.js" type="text/javascript"></script>'
+? '<style>'
+text raw
+td.tile {
+height:100px;
+width: 100px;
+}
+.img-circle {
+    border-radius: 50%;
+}
+endtext
+? '</style>'
+%>
+</head>
+<body style='overflow:hidden'>
+<%
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+set macros on
+set fixed on 
+//--
+// catalogview.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private database   = getParameter("database", "southwind")   
+private table      = getParameter("table", "employees") 
+private heading    = getParameter("heading", "") 
+private cellfooter = getParameter("cellfooter", "") 
+private cellfootertarget = getParameter("cellfooterlink", "") 
+private cellfooterkey = getParameter("cellfooterkey", "") 
+private image      = getParameter("image", "") 
+private imagewidth = getParameter("imagewidth", "200px") 
+private imageheight= getParameter("imageheight", "200px") 
+private caption    = getParameter("caption", "''") 
+private subcaption = getParameter("subcaption", "") 
+private captiontarget = getParameter("captionlink", "") 
+private captionkey = getParameter("captionkey", "") 
+private details    = getParameter("details", "'No details specified'") 
+private filter     = getParameter("filter", "") 
+private gridlines  = getParameter("gridlines", "false") 
+private orderby    = getParameter("orderby", "")  
+private columns    = getParameter("columns", "1")  
+private readmore    = getParameter("readmore", "false")  
+private readmoresize= getParameter("readmoresize", "0")  
+private readmoresearchkey = getParameter("readmoresearchkey", "''")  
+private readmorelink= getParameter("readmorelink", "")  
+private paginate    = getParameter("paginate", "true")  
+private pagenumber  = val(getParameter("pagenumber", "1")) 
+private pagesize    = val(getParameter("pagesize", "8")) 
+private sectionid 	= getParameter("sectionid", "")
+private pagelinks 	= val(getParameter("pagesize", "10")) 
+private backcolor = getParameter("backcolor", "#e5e5e5")
+private borderbottomandrightcolor = getParameter("borderbottomandrightcolor", "#b0b0b0")
+private bordertopandleftcolor = getParameter("m_bordertopandleftcolor", "lightgray")
+private m_clickdelegate  = getParameter("clickdelegate", "") 
+private m_dblclickdelegate  = getParameter("dblclickdelegate", "") 
+private m_delegatelib = getParameter("delegatelib", "")
+private m_delegate  = getParameter("delegate", "") 
+private m_targetui = getParameter("targetui", "")
+
+//--
+// private variables
+//--
+private m_key
+private m_recno
+private m_tag
+private m_selected
+private m_target
+private m_pagecount
+private m_recpos
+private m_bottom_style
+private m_maxpages
+private m_pagesize = pagesize
+private m_tiles
+private m_colwidth
+private m_nextpage
+private m_prevpage
+private m_backcolor = backcolor
+private m_borderbottomandrightcolor = borderbottomandrightcolor
+private m_bordertopandleftcolor = bordertopandleftcolor
+
+gridlines = "false"
+
+if isPhoneGap() or m_targetui = "phone" or m_targetui = "tablet" or m_targetui = "web"
+	columns = '1'
+	imagewidth = '100px'
+	imageheight = '100px'
+	m_bottom_style = "0"
+else
+	imagewidth = '100px'
+	imageheight = '100px'
+	m_bottom_style = "0"	
+endif
+
+if paginate = "false"
+	pagesize = 0
+	m_recpos = 1
+endif
+
+text raw
+<script>
+//--------------------------------------------------------------------------------
+function callClickDelegate(data)
+{
+	if ("&m_clickdelegate" == "") return;
+	// see if there is a JavaScript delegate and if not evaluate on the server
+	try
+	{
+		if (Lianja.isDevMode())
+		{
+			var result = Lianja.evaluate("javascript:&m_clickdelegate('" + data + "');");
+			if (typeof result === 'string' && result == 'error: undefined function')
+			{
+				throw "error";
+			}
+		}
+		else
+		{
+			eval("window.parent.&m_clickdelegate('" + data + "')");
+		}
+	}
+	catch (e)
+	{
+		Lianja.evaluate("&m_clickdelegate('" + data + "')");
+	}
+};
+
+//--------------------------------------------------------------------------------
+function callDblClickDelegate(data)
+{
+	if ("&m_dblclickdelegate" == "") return;
+	// see if there is a JavaScript delegate and if not evaluate on the server
+	try
+	{
+		if (Lianja.isDevMode())
+		{
+			var result = Lianja.evaluate("javascript:&m_dblclickdelegate('" + data + "');");
+			if (typeof result === 'string' && result == 'error: undefined function')
+			{
+				throw "error";
+			}
+		}
+		else
+		{
+			eval("window.parent.&m_dblclickdelegate('" + data + "')");
+		}
+	}
+	catch (e)
+	{
+		Lianja.evaluate("&m_dblclickdelegate('" + data + "')");
+	}
+};
+	
+</script>
+
+endtext 
+
+m_colwidth = int(100 / &columns)
+
+if len(m_delegatelib) > 0
+	set procedure to &m_delegatelib
+endif
+
+// open the database
+if len(database())=0
+	open database &database
+endif
+
+// open the table so we can save context
+m_recno = 0
+m_tag = ""
+m_selected = select()
+if used("&table")
+	select &table
+	m_tag = tag()
+	m_recno = recno()
+else
+	use &table in 0 current
+endif
+
+// perform the query
+if len(filter) > 0
+	filter = "where "+filter
+endif
+
+// construct sql statement
+if len(orderby) = 0
+	orderby = ""
+else
+	orderby = "order by &orderby"
+endif
+
+tmpfile = sys(2015)	
+select * from &table &filter &orderby save as "&tmpfile"
+use "&tmpfile" in 0 current
+
+// declare some special symbols (html uses ampersand so do we for macros)	
+amp = chr(38) 
+nbsp = amp + "nbsp;"   
+
+m_count = reccount()
+	
+// calculate pagecount
+if pagesize > 0	and pagenumber > 0
+	pagecount = int(m_count / pagesize)	   
+	m_recpos = int((pagenumber-1) * pagesize)+1
+	if m_recpos < 1
+		m_recpos = 1
+	endif
+	m_maxpages = int(m_count / m_pagesize) + iif(int(m_count % m_pagesize)>0,1,0)
+	if m_maxpages < 1 and m_count > 0
+		m_recpos = 1
+		pagesize = 0
+	else
+		m_count = m_recpos + pagesize
+		m_bottom_style = "80"
+	endif
+else
+	m_recpos = 1
+endif
+    
+? '<div style="position:absolute;left:0px;right:0px;top:0px;bottom:&m_bottom_style.px;overflow-y:auto;background-color:&m_backcolor;">'
+
+// generate the html output 
+
+? '<table width="100%" cellpadding="10px" cellspacing="10px" style="background-color:&m_backcolor;" border="0">' 
+if len(heading) > 0
+	? '<caption class="headingcaption">&heading</caption>'  
+endif 
+
+// scan through the records generating the html table rows and columns
+goto &m_recpos
+ 
+// for all records... 
+for i=m_recpos to m_count
+	if eof()
+		exit
+	endif
+	if pagesize > 0 and (i >= (m_recpos+(pagesize/&columns)))
+		exit
+	endif
+	
+	if i > m_recpos and "&gridlines" = "true"
+		? '<tr>' + replicate('<td>&nbsp</td><td></td>', &columns) + '</tr>'
+		? '<tr class="headingbottomborder">' + replicate('<td></td><td></td><td></td><td></td>', &columns) + '</tr>'
+	endif	 
+	? '<tr>' + replicate('<td>&nbsp</td><td></td>', &columns) + '</tr>'
+	? '<tr valign=top>'	
+		
+	// now display the tiles
+	? '<td style="width:10px !important;"></td>'
+			
+	m_tiles = 0
+	for j=1 to &columns
+		m_tiles = m_tiles + 1
+		? '<td>'
+		? '<table width="100%" cellpadding="0" cellspacing="0" >'
+		? '<tr valign="top">'
+		if len("&m_delegate") = 0
+			? '<td class="tile" style="vertical-align:middle;padding:10px !important;background-color:white;border-bottom: 1px solid &m_borderbottomandrightcolor;border-top: 1px solid &m_bordertopandleftcolor;border-left: 1px solid &m_bordertopandleftcolor;">'
+		else
+			? '<td class="tile" style="vertical-align:middle;width:10px; padding:0px !important;background-color:white;border-bottom: 1px solid &m_borderbottomandrightcolor;border-top: 1px solid &m_bordertopandleftcolor;border-left: 1px solid &m_bordertopandleftcolor;">'
+		endif
+		if len(m_clickdelegate) > 0 and len(readmoresearchkey) > 0
+			m_key = &readmoresearchkey
+			? [<div style='cursor:pointer;width:100%;display:inline-block;' ondblclick="javascript:callDblClickDelegate('&m_key')">]
+		else
+			? "<div style='display:inline-block;'>"
+		endif
+		if len(image)>0	and len("&m_delegate") = 0
+			// Create a unique temporary name (guaranteed uniqueness across concurrent users in a network)
+			m_tmpnam = tmpnam()
+			// Extract the photo from the database and write it to the temporary file
+			objectWrite(m_tmpnam, &image)
+			// Generate the base64 encoded contents as an IMG tag and output into as HTML 
+			if len(captiontarget) > 0
+				if len(captionkey) > 0
+					m_key = &captionkey
+					set macros off
+					m_target = captiontarget + "?action=search&text=" + etos(m_key)
+					set macros on
+				else
+					m_target = captiontarget
+				endif
+				? [<a href="javascript:Lianja.showDocument('] + m_target + [')">] 
+			endif
+			if len(objectType(&image)) > 0
+				base64_encode_file(m_tmpnam, objectType(&image), "&imagewidth", "&imageheight", "style='border-radius:50%'")
+			endif
+			if len(captiontarget) > 0
+				?  [</a>]
+			endif
+			
+			// Don't forget to remove the temporary file
+			erase &m_tmpnam	
+		elseif len("&m_delegate") = 0
+			?? "No image specified" 
+		endif
+
+		? "</div>"
+		? "</td>"   
+	
+		? '<td align="left" style="padding-bottom:10px !important;padding-top:10px !important;padding-right:10px !important;background:white;border-bottom: 1px solid &m_borderbottomandrightcolor;border-right: 1px solid &m_borderbottomandrightcolor;border-top: 1px solid &m_bordertopandleftcolor;">'	
+		? "<div>"
+		? '<table cellpadding="0" cellspacing="0" bgcolor="white" border="0" width="100%">'  		
+		? '<tr>'
+		if len(captiontarget) > 0 
+			? '<td class="tablecaption" align="left">'
+			if len(captionkey) > 0
+				m_key = &captionkey
+				set macros off
+				m_target = captiontarget + "?action=search&text=" + etos(m_key)
+				set macros on
+			else
+				m_target = captiontarget
+			endif
+			? [<a href="javascript:Lianja.showDocument('] + m_target + [')">] + &caption + [</a>]
+		else
+			? '<td align="left">'
+			if len( &caption ) > 0
+				? "<h4>" + &caption + "</h4>"
+			endif
+		endif	
+		if len(subcaption) > 0
+			? '<div class="headingsubcaption">'
+			? &subcaption
+			? '</div>'
+		endif	
+		? '</td>'
+		? '</tr>'
+		? '<tr>'
+		if &columns > 1
+			m_td_style = 'style="max-width:500; word-break:break-word;"'
+		else
+			m_td_style = ''
+		endif
+		
+		if len("&m_delegate") != 0
+			m_p_style = ''
+			? '<td class="tabledetails" align="left" &m_td_style>'
+			? '<div &m_p_style>'
+			&m_delegate()
+			? '</div>'
+		elseif val(readmoresize) > 0
+			m_p_style = 'style="height:&readmoresize.em;overflow-y:hidden;"'
+			? '<td class="tabledetails" align="left" &m_td_style>'
+			? '<div &m_p_style>'
+			? &details
+			? '</div>'
+		else
+			m_p_style = ''
+			? '<td class="tabledetails" align="left" &m_td_style>'
+			? '<div &m_p_style>'
+			? &details
+			? '</div>'
+		endif
+				
+		if readmore = "true" and len("&m_delegate") = 0
+			if len(m_clickdelegate) > 0
+				m_key = &readmoresearchkey
+				? [<a href="javascript:callClickDelegate('&m_key')"><br>Read more...</a>]
+			elseif len(readmoresearchkey) > 0
+				m_key = &readmoresearchkey
+				set macros off
+				if at("||", readmorelink) > 0
+					astore(m_target_array, readmorelink, "||")
+					m_target_array[1] = m_target_array[1] + "?action=search&text=" + alltrim(etos(m_key))
+					m_target = astring(m_target_array, "||")
+				else
+					m_target = readmorelink + "?action=search&text=" + etos(m_key)
+				endif
+				set macros on
+				? [<a href="javascript:Lianja.showDocument('] + m_target + [')"><br>Read more...</a>]
+			else
+				m_target = readmorelink
+				? [<a href="javascript:Lianja.showDocument('] + m_target + [')"><br>Read more...</a>]
+			endif
+		endif	
+		? '</td>'
+		? '</tr>'
+				
+		if len(cellfooter) > 0 and len("&m_delegate") == 0
+			? '<tr>'
+			? '<td class="cellfooterlink">'
+			if len(cellfootertarget) > 0
+				if len(cellfooterkey) > 0
+					m_key = &cellfooterkey
+					set macros off
+					m_target = cellfootertarget + "?action=search&text=" + etos(m_key)
+					set macros on
+				else
+					m_target = cellfootertarget
+				endif
+				? [<a href="javascript:Lianja.showDocument('] + m_target + [')">] +cellfooter + [</a>]
+			else
+				? &cellfooter
+			endif
+			? '</td>'
+			? '</tr>'
+		endif
+	
+		? '</table>'
+		? '</div>'
+		? '</td>'
+		? '</tr>'
+		? '</table>'	
+
+		? '</td>'	
+		skip
+		if eof()
+			exit
+		endif
+		? '<td style="width:10px !important"></td>'		
+	next
+	if pagesize > 0 and (i = (m_recpos+(pagesize/&columns)-1))
+		do while m_tiles < &columns and &columns > 1
+			m_tiles = m_tiles + 1
+			? "<td width='&m_colwidth%'></td>"
+		enddo
+	endif
+	
+	? '</tr>'
+	
+next  
+
+? "<tr>"
+? "<td>&nbsp</td>"
+for i=1 to &columns
+	? "<td>&nbsp</td>"
+	? "<td>&nbsp</td>"
+endfor
+? "<td>&nbsp</td>"
+? "</tr>"
+? '</table>'
+
+// handle pagination 
+if pagesize > 0
+	m_prevpage = int(pagenumber - 1)
+	m_nextpage = int(pagenumber + 1)
+	? '</div>'
+	? '<div style="position:absolute;bottom:0px;left:0px;right:0px;height:&m_bottom_style.px;text-align:center;background-color:&m_backcolor;">'
+    ? '<ul class="pagination pagination-lg">'
+    	if pagenumber = 1
+ 			? [<li class="disabled"><a>&laquo;</a></li>]
+ 			? [<li class="disabled"><a>&lsaquo;</a></li>]
+	    else
+  			? [<li title="First Page" ><a href="javascript:Lianja.paginateWebViewSection('&sectionid',1,&m_pagesize)">&laquo;</a></li>]
+  			? [<li title="Previous Page" ><a href="javascript:Lianja.paginateWebViewSection('&sectionid',&m_prevpage,&m_pagesize)">&lsaquo;</a></li>]
+		endif
+		m_startpage = (pagenumber-1) % pagesize
+		if m_startpage < 1
+			m_startpage = 1
+		endif
+        for i=m_startpage to m_startpage+9
+        	if i > m_maxpages
+	        	exit
+			endif
+        	if i = pagenumber
+           		? '<li class="active"><a>' + etos(int(i)) + '</a></li>' 
+	        else
+            	? [<li><a href="javascript:Lianja.paginateWebViewSection('&sectionid',&i,&m_pagesize)">] + etos(int(i)) + '</a></li>' 
+	        endif
+		endfor
+ 		if pagenumber = m_maxpages
+  			? [<li class="disabled"><a>&rsaquo;</a></li>]
+  			? [<li class="disabled"><a>&raquo;</a></li>]
+		else
+  			? [<li title="Next Page"><a href="javascript:Lianja.paginateWebViewSection('&sectionid',&m_maxpages,&m_pagesize)">&rsaquo;</a></li>]
+  			? [<li title="Last Page"><a href="javascript:Lianja.paginateWebViewSection('&sectionid',&m_nextpage,&m_pagesize)">&raquo;</a></li>]
+		endif
+    ? '</ul>'
+	? '</div>'
+else
+	? '</div>'
+endif
+
+// delete temporary files
+use
+erase '&tmpfile..dbf'
+erase '&tmpfile..dbx'
+erase '&tmpfile..dbt'
+
+// restore record position as the table may be open in many places
+if m_recno <> 0
+	select &table
+	if not empty(m_tag)
+		set order tag &m_tag
+	endif
+	goto &m_recno
+endif
+
+// reselect cursor that was active on entry
+select &m_selected 
+
+%>
+<script>
+	document.onselectstart = function() { return false; };
+</script>
+</body>
+</html>

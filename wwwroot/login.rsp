@@ -1,0 +1,123 @@
+<%@ Language=VFP %>
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset="UTF-8" />
+<meta name="description" content="Lianja App Center" />
+<meta name="author" content="Lianja Inc." />
+<meta name="copyright" content="2016, Lianja Inc." />
+<meta name="apple-mobile-web-app-capable" content="yes" /> 
+
+<style>
+#_mainbody {
+    overflow: hidden;
+    overflow-x: auto;
+    ms-overflow-x: auto;
+    width: 100%;
+    min-height: 100%;
+    overflow-y: hidden;
+    ms-overflow-y: hidden;
+}
+#mainbody {
+    overflow: hidden;
+    overflow-x: auto;
+    ms-overflow-x: auto;
+    /*width: 100%;*/
+    min-height: 100%;
+    overflow-y: hidden;
+    ms-overflow-y: hidden;
+    background-image: none !important;
+	background-color: #363636 !important;
+}
+#body {
+    overflow: hidden;
+    overflow-x: auto;
+    ms-overflow-x: auto;
+    width: 100%;
+    min-height: 100%;
+    overflow-y: hidden;
+    ms-overflow-y: hidden;
+}
+</style>
+
+<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="css/droptiles.css?v=24">
+
+<script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="js/lianja.js"></script>
+<script type="text/javascript" src="library/LianjaWebFramework/LianjaHtmlClient.js?v=1.4.1"></script>
+<script type="text/javascript" src="library/md5/md5.js"></script>
+</head>
+<%
+	// clears cookies
+	response.logout()
+%>
+<body id="mainbody" onresize="lianja_resize();" oncontextmenu='return false;'>
+	<div id="body">
+		<div id="navbar" class="navbar navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container-fluid" style="border-bottom: 0px solid orange;">
+                    <a class="pull-left" style="margin-top: 7px; margin-right: 5px;">
+                        <img src="img/elephant_icon32.png" style="max-height: 48px;" />
+                    </a><h1><a class="brand">Lianja</a></h1>
+                </div>
+            </div>
+        </div>
+        <div id="content" class="metro">
+<%
+? '<p>&nbsp;</p>'
+? '<div id="start"> Lianja App Center Login</div>'
+%>
+	   	<div>
+            <p>&nbsp;</p>
+            <form class="metro-form">
+                <div class="metro-form-control" style="width: 300px;">
+                    <label style='background:transparent;color:lightgray;font-size:15pt;'>Username</label>
+                    <div class="metro-text-box">
+                        <input id="username" name="username" type="text" autofocus style="height:27px;" />
+                    </div>
+                </div>
+                <div class="metro-form-control" style="width: 300px;">
+                    <label style='background:transparent;color:lightgray;font-size:15pt;'>Password</label>
+                    <div class="metro-text-box">
+                        <input id="password" name="password" type="password" value="" style="height:27px;" />
+                    </div>
+                </div>
+				<p id="message" style='background:transparent;color:yellow;font-size:15pt;'></p>
+                <a href="javascript:Lianja.login();" class="metro-button">Login</a><a href="javascript:Lianja.resetLogin();" class="metro-button">Reset</a>
+            </form>    
+        </div>
+	</div>
+       <div id="copyrightleft">            
+            Lianja&nbsp;&copy;&nbsp;Version 2.1
+        </div>
+        <div id="copyright">            
+            Copyright &copy; 2016 Lianja Inc. All Rights Reserved Worldwide.
+        </div>
+     </div>
+
+<script type="text/javascript" src="js/combined.js?v=24"></script>
+
+<script>
+$(function() {
+    $("#username").keypress(function (e) {
+        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+            $("#password").focus();
+            return false;
+        } else {
+            return true;
+        }
+    });
+    $("#password").keypress(function (e) {
+        if ((e.which && e.which == 13) || (e.keyCode && e.keyCode == 13)) {
+            Lianja.login();
+            return false;
+        } else {
+            return true;
+        }
+    });
+});
+</script>
+</body>
+
+</html>

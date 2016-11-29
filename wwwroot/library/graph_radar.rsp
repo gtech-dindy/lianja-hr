@@ -1,0 +1,145 @@
+<%@ Language=Recital %>
+<html>
+
+<%
+private m_libpath
+if isPhoneGap()
+	m_libpath = "js/library"
+elseif isElectron()
+	m_libpath = iif(isElectronDebug(), "file:///library", "file:///resources/app.asar/library")
+else
+	m_libpath = libPath()
+endif
+? "<head>"
+? '<script src="&m_libpath/graphs/RGraph.common.core.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.tooltips.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.effects.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.key.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.radar.js"></script>'
+? "</head>"
+%>
+
+<%
+set macros on
+//--
+// graph_fuel.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_width  = getParameter("width", "760") 
+private m_height = getParameter("height", "500") 
+private m_id     = getParameter("id", "graphCanvas") 
+private m_data = getParameter("data", "3, 3, 41, 37, 16") 
+private m_labels = getParameter("labels", "Safari (3%),Other (3%),MSIE 7 (41%),MSIE 6 (37%),Firefox (16)") 
+private m_keylabels = getParameter("keylabels", "Safari,Other,MSIE 7,MSIE 6,Firefox") 
+private m_guttertop = getParameter("guttertop", "40") 
+private m_tooltips = getParameter("tooltips", "Safari,Other,MSIE 7,MSIE 6,Firefox") 
+private m_gutterbottom = getParameter("gutterbottom", "25") 
+private m_gutterleft = getParameter("gutterleft", "25") 
+private m_gutterright = getParameter("gutterright", "25") 
+private m_shadow  = getParameter("shadow", "true") 
+private m_title  = getParameter("title", "Untitled Radar Chart") 
+private m_titleforecolor  = getParameter("titleforecolor", "gray") 
+private m_titlebackcolor  = getParameter("titlebackcolor", "") 
+private m_labelsabove  = getParameter("labelsabove", "true") 
+private m_gradient  = getParameter("gradient", "true") 
+private m_margin  = getParameter("margin", "5") 
+private m_colors  = getParameter("colors", "#eef, #ddf, #ccf, #bbf, #bbb") 
+private m_delegate  = getParameter("delegate", "") 
+private m_backcolor  = getParameter("backcolor", "#f7f7f7") 
+
+// emit javascript code
+text raw
+<body style="background:&m_backcolor;overflow:hidden;">
+<style>
+.center-div
+{
+     position: relative;
+     margin: auto;
+     top: 0;
+     right: 0;
+     bottom: 0;
+     left: 0;
+     width: &m_width.px;
+     height: &m_height.px;
+}
+</style>
+<div class="center-div">
+<canvas id="&m_id" width="&m_width.px" height="&m_height.px" style="background:&m_backcolor;overflow:hidden;">[No canvas support]</canvas>
+</div>
+<script>
+    window.onload = function ()
+    {
+	    var data = [&m_data];
+	    var tooltips = [];
+	    var i;
+	    var tips = "&m_tooltips";
+	    var labels = "&m_labels";
+	    var colors = "&m_colors";
+	    var gradient = &m_gradient;
+	    var keylabels = "&m_keylabels";
+	    
+	    tips = tips.split(",");
+	    for (i=0; i<tips.length; ++i) tooltips.push(tips[i]);	
+	    labels = labels.split(",");
+    	colors = colors.split(",");
+	   	keylabels = keylabels.split(",");
+
+        // Create the Radar chart. The arguments are the canvas ID and the data to be shown on the chart.
+        var chart = new RGraph.Radar('&m_id', data);
+        
+        // If you want to show multiple data sets, then you give them like this:
+        // var radar = new RGraph.Radar('myRadar', [3,5,6,8], [4,5,2,6]);
+
+        // Configure the Radar chart to look as you wish.
+        chart.Set('chart.background.circles', true);
+        chart.Set('chart.color', 'rgba(255,0,0,0.5)');
+        chart.Set('chart.circle', 20);
+        chart.Set('chart.circle.fill', 'rgba(200,255,200,0.5)');
+        chart.Set('chart.labels', labels);
+        
+  		chart.Set('chart.key.position.x', chart.canvas.width - &m_gutterright - 60);
+        chart.Set('chart.key.position.y', &m_guttertop);
+        chart.Set('chart.key.linewidth', 0.001);
+        chart.Set('chart.key.background', 'rgba(0,0,0,0)');
+        chart.Set('chart.key.colors', colors);
+        chart.Set('chart.key', keylabels); 
+    
+       	chart.Set('chart.gutter.left', &m_gutterleft);
+    	chart.Set('chart.gutter.right', &m_gutterright);
+    	chart.Set('chart.gutter.top', &m_guttertop);
+    	chart.Set('chart.gutter.bottom', &m_gutterbottom);
+    	chart.Set('chart.shadow', &m_shadow);
+        
+ 	    chart.Set('chart.title', '&m_title');
+ 	    chart.Set('chart.title.vpos', 0.4);
+	    if ('&m_titlebackcolor' != '') chart.Set('chart.title.background', '&m_titlebackcolor');
+	    chart.Set('chart.title.color', '&m_titleforecolor');		
+
+	    chart.Set('chart.colors.sequential', true);
+	    chart.Set('chart.colors', colors);
+
+        // Now call the .Draw() method to draw the chart.
+		//chart.Set('chart.tooltips', tooltips);
+		//chart.Set("chart.tooltips.event", "onclick");
+        chart.Draw();
+        
+		// the click_handler will get called when a bar is clicked on
+		// if this is running inside a webview then an event is dispatched back into
+		// the Lianja runtime
+		function click_handler(canvas, text, x, y, idx)
+	    {
+	        if (typeof(Lianja)=="object")
+	        {
+	        	Lianja.dispatchEvent("&m_delegate", tips[idx]);
+		    }
+	    }  
+	    chart.Set('chart.tooltips.override', click_handler);        
+    }
+</script>
+endtext
+%>
+</body>
+</html>
+
+

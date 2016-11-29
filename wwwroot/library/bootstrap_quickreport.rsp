@@ -1,0 +1,346 @@
+<%@ Language=Recital %>
+<html>
+<head> 
+<link rel='stylesheet' href='../../library/bootstrap/css/bootstrap.min.css' type='text/css'/>
+<style>
+body {
+	margin: 10px;
+	height: 96%;
+}
+</style>
+</head>
+<body>
+
+<%
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+timeofday()
+set macros on
+//--
+// quickreport.rsp?parameter=value&parameter=value...
+//
+// parameters 
+//--
+private database   = getParameter("database", "southwind") 
+private table      = getParameter("table", "example") 
+private fields     = getParameter("fields", "*") 
+private groupby    = getParameter("groupby", "") 
+private heading    = getParameter("heading", "Report for all clients by state") 
+private headings   = getParameter("headings", "") 
+private filter     = getParameter("filter", "") 
+private hyperlink  = getParameter("hyperlink", "") 
+private columns    = getParameter("columns", "") 
+private subtotals  = getParameter("subtotals", "") 
+private gridlines  = getParameter("gridlines", "") 
+
+// open the database
+if len(database())=0
+	open database &database
+endif
+
+// get the field descriptions and setup an associative array of fields and descriptions
+m_recno = 0
+m_selected = select()
+if used("&table")
+	select &table
+	m_recno = recno()
+else
+	use &table in 0 current
+endif
+
+// update the credit available for the example table
+if lower(table) = "example"
+	replace all available with limit-balance
+endif
+
+declare afieldDesc[ fldcount() ]
+adesc(afieldDesc)
+declare afieldMap[ ]
+for i=1 to fldcount()
+	afieldmap[ field(i) ] = afieldDesc[ i ]
+endfor
+
+if m_recno = 0
+	use
+endif
+
+// perform the query
+if len(filter) > 0
+	filter = "where "+filter
+endif
+
+// construct sql statement
+if len(groupby) = 0
+	m_hassubtotals = .f.
+	orderby = ""
+	m_none = ""
+else
+	m_hassubtotals = .t.
+	orderby = "order by &groupby"
+endif
+
+tmpfile = sys(2015)	
+select &fields from &table &filter &orderby save as "&tmpfile"
+use "&tmpfile" in 0 current
+
+// get the column metadata
+private afieldList = explode(",", fldlist())
+private aHeadings = explode(",", headings)
+private aColumns = explode(",", columns)
+if alen(aColumns) > 0
+	m_columns = alen(aColumns)
+else
+	m_columns = fldcount()
+	release aColumns
+	declare aColumns[ m_columns ]
+	for i=1 to m_columns
+		aColumns[i] = str(i)
+	endfor
+endif
+
+private tmpSubTotals = explode(",", subtotals)
+private aSubTotals[ fldcount() ]
+if (alen(tmpSubTotals) = 0 and lower(table) = "example")
+	aSubTotals[9] = .t.
+	aSubTotals[10] = .t.
+	aSubTotals[11] = .t.
+else
+	for j=1 to alen(tmpSubTotals)
+		aSubTotals[ val( tmpSubTotals[j] ) ] = .t.
+	endfor
+endif
+
+// declare some special symbols (html uses ampersand so do we for macros)	
+amp = chr(38) 
+nbsp = amp + "nbsp;"  
+
+// generate the html output
+? ('<table style="overflow:auto" class="table table-striped table-bordered table-condensed table-hover">') 
+? ('<caption>&heading on &(date()) at &(time())</caption>') 
+//? ('<tr>' + replicate('<td></td>', fldcount()) + '</tr>')
+
+// display column headings
+? ('<tr>')
+	if len(aheadings) > 0
+		for j=1 to len(aheadings))
+			?? ('<td')
+			?? (aheadings[ j ])
+			?? ('</td>')
+    	endfor
+	else
+		for j=1 to m_columns)
+			if alen(aColumns) > 0
+				colpos = val(aColumns(j))
+			else
+				colpos = j
+			endif
+			?? ('<td')
+			?? (afieldmap[ colpos ])
+			?? ('</td>')
+    	endfor
+    endif
+? ('</tr>') 
+? ('<tr>' + replicate('<td></td>', m_columns) + '</tr>')
+
+// first row of the table
+? ('<tr colspan="&(m_columns)">') + replicate('<td>&(nbsp)</td>', m_columns) + '</tr>' 
+
+// group subtotals by the "groupby" field 
+if len(groupby) != 0
+	last_group = &groupby
+	m_nosubtotals = .f. 
+else
+	last_group = ""
+	asubtotals = .f.
+	m_nosubtotals = .t. 
+endif
+
+declare subtotals[ fldcount() ]
+subtotals = 0
+private lastSubTotals[ fldcount() ] 
+lastsubtotals = 0
+m_ended = .f.
+if m_nosubtotals
+	m_count = reccount()
+else
+	m_count = reccount()+2
+endif
+	
+// scan through the records generating the html table rows and columns
+goto top
+     
+// for all records...	   
+for i=1 to m_count
+	// alternate row colors
+	if mod(i,2) = 1
+    	rowcolor = "#f1f6fe"
+    	altcolor = "#FFFFFF"
+	else
+		rowcolor = "#FFFFFF"        	
+		altcolor = "#f1f6fe"
+    endif
+
+	// check for subtotal break
+	if m_hassubtotals
+		if &groupby != last_group and i > 1) or (i > reccount())
+			// display subtotals
+			if i <= reccount()+1
+				?? ('<tr>')
+			elseif i = reccount()+2
+				?? ('<tr>')
+			endif
+					
+			if i <= reccount()+1
+					?? ('<td colspan="2" halign=left><b><font color="gray">&(nbsp)Sub-total for: ' + last_group + '</font></b>')
+			elseif i = reccount()+2
+					?? ('<td colspan="2" halign=left><b><font color="gray">&(nbsp)Totals:</font></b>')
+					m_ended = .t.
+	        endif
+			
+			for k=3 to alen(aColumns)
+				colpos = val(aColumns[k])
+				if asubtotals(colpos)
+					?? ('<td align=right>')
+	        		tmpfld = currency(subtotals[colpos])
+	        		fld = 'tmpfld'
+			        if subtotals[colpos] <= 0
+			        	beginfont = '<font color="red">'
+					else
+			        	beginfont = '<font color="gray">'
+					endif
+					?? ('<b>' + beginfont + etos(&fld)+'</font><b>')
+					?? ('</td>')
+				else
+					?? ('<td style="datacell">&(nbsp)</td>')
+				endif
+			endfor
+	
+			if not m_ended
+				?? ('<tr bgcolor="white" height="1px">' + replicate('<td></td>', m_columns) + '</tr>')
+				if i > reccount()+1
+					?? ('<tr bgcolor="white" height="1px">' + replicate('<td></td>', m_columns) + '</tr>')
+					?? ('<tr bgcolor="black" height="1px">' + replicate('<td></td>', m_columns) + '</tr>')
+	        	endif
+				?? ('<tr colspan="&(m_columns)">')
+				?? (replicate('<td>&(nbsp)</td>',m_columns))
+				?? ('</tr>') 
+			endif
+			
+			if i = reccount()+1	
+				subtotals = 0		
+				for k=4 to alen(aSubTotals)
+					if asubtotals(k)
+			    		subtotals[k] = lastsubtotals[k]
+					endif
+				endfor
+	        	loop
+	        endif
+	
+			subtotals = 0
+			
+			if i > reccount()+1
+	        	exit
+			endif
+
+		endif
+
+		// save subtotal values 
+		if not m_nosubtotals
+			last_group = &groupby 
+			for k=1 to alen(aColumns)
+				colpos = val(aColumns[k])
+				if asubtotals(colpos)
+					subtotals[colpos] = subtotals[colpos] + &(afieldList[colpos])
+					lastsubtotals[colpos] = lastsubtotals[colpos] + &(afieldList[colpos])
+				endif
+			endfor
+		endif
+
+	endif
+
+	// for all columns...
+	if gridlines = "true"
+		? ('<tr>')
+	else
+		? ('<tr>')
+	endif
+	for j=1 to m_columns
+		if alen(aColumns) > 0
+			colpos = val(aColumns[j])
+		else
+			colpos = j
+		endif
+		fld = afieldList[colpos]
+		beginfont = ""
+		endfont = ""
+		if (aSubTotals[ colpos ])
+        	fldvalue = currency(&fld)
+	        if &fld <= 0
+	        	beginfont = '<font color="red">'
+		        endfont = '</font>'
+			endif
+			?? ('<td valign=top align=right>')
+		else
+    		if gridlines = "true"
+	 			?? ('<td valign=top align=left>')
+			else
+ 				?? ('<td valign=top align=left>')
+			 endif
+			fldvalue = &fld
+		endif
+		if (j = 1)
+			space = "&nbsp"
+		else
+			space = ""
+		endif
+		if (upper(hyperlink) = upper(fld))
+			?? ('<a href="' + lower(alltrim(etos(&fld))) + '">&(space)' + alltrim(etos(&fld)) + '</a>')
+		else
+			?? (beginfont+"&(space)"+alltrim(etos(fldvalue))+endfont)
+		endif
+		?? ('</td>')
+    endfor     
+	?? ('</tr>')
+	
+	skip
+next  
+
+?? ('<tr>')
+?? (replicate('<td>&(nbsp)</td>', m_columns))
+?? ('</tr>')
+
+if not m_hassubtotals and .f.
+	?? ('<tr>')
+	?? ('<td colspan="&(m_columns)"><hr></td>')
+	?? ('</tr>')
+endif
+
+//?? ('<tr>')
+//?? ('<td colspan="&(m_columns)">** End of report elapsed time '+timeofday(4)+' seconds **</td>')
+//?? ('</tr>')
+
+// pad the output to beautify it and fit better
+do while m_count < 50 and .f.
+	?? ('<tr>')
+	?? (replicate('<td>&(nbsp)</td>', m_columns))
+	?? ('</tr>')
+	m_count = m_count + 1
+enddo
+?? ('</table>')
+
+// delete temporary files
+use
+erase '&tmpfile..dbf'
+erase '&tmpfile..dbt'
+
+// restore record position as the table may be open in many places
+if m_recno <> 0
+	select &table
+	goto &m_recno
+endif
+
+// reselect cursor that was active on entry
+select &m_selected 
+
+%>
+</body>
+</html>

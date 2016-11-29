@@ -1,0 +1,167 @@
+<!--
+
+	This is a simple wrapper for GalleryView sections.
+	
+-->
+<%@ Language=VFP %>
+<%
+//--
+// galleryview.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_database  = getParameter("database", "southwind") 
+private m_table  = getParameter("table", "employees") 
+private m_filter     = getParameter("filter", "") 
+private m_orderby    = getParameter("orderby", "")  
+private m_tiledelegate  = getParameter("tiledelegate", "defaultTiledelegate") 
+private m_caption  = getParameter("caption", "alltrim(firstname)+' '+alltrim(lastname)+'<br>'+alltrim(address)+'<br>'+alltrim(city)+'<br>'+alltrim(region)+'<br>'+alltrim(country)") 
+private m_summary  = getParameter("summary", "title") 
+private m_contentdelegate  = getParameter("contentdelegate", "defaultContentdelegate") 
+private m_heading  = getParameter("heading", "alltrim(firstname)+' '+alltrim(lastname)") 
+private m_content  = getParameter("content", "notes") 
+private m_contenturl  = getParameter("contenturl", "") 
+private m_delegatelib  = getParameter("delegatelib", "") 
+
+//--
+// private variables
+//--
+private m_key
+private m_recno
+private m_tag
+private m_selected
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+proc defaultTileDelegate()
+	private tilesummary = &m_caption
+	private tilecategory = &m_summary
+	text raw
+	<h2 class="title title--preview">&tilesummary</h2>
+	<div class="loader"></div>
+	<span class="category">&tilecategory</span>
+	endtext
+endproc
+
+proc defaultContentDelegate()
+	private contenttitle = &m_heading
+	? '<h2 class="title title--full">&contenttitle</h2>'
+	? '<p>'
+	? &m_content
+	? '</p>'
+endproc
+
+set macros on
+set fixed on 
+
+private m_libpath
+if isPhoneGap()
+	m_libpath = "js/library"
+elseif isElectron()
+	m_libpath = iif(isElectronDebug(), "file:///library", "file:///resources/app.asar/library")
+else
+	m_libpath = libPath()
+endif
+
+if len(m_delegatelib) > 0
+	set procedure to &m_delegatelib
+endif
+
+// open the database
+if len(database())=0
+	open database &m_database
+endif
+
+// open the table so we can save context
+m_recno = 0
+m_tag = ""
+m_selected = select()
+if used("&m_table")
+	select &m_table
+	m_tag = tag()
+	m_recno = recno()
+else
+	use &m_table in 0 current
+endif
+
+// perform the query
+if len(m_filter) > 0
+	m_filter = "where "+m_filter
+endif
+
+// construct sql statement
+if len(m_orderby) = 0
+	m_orderby = ""
+else
+	m_orderby = "order by &m_orderby"
+endif
+
+tmpfile = sys(2015)	
+select * from &m_table &m_filter &m_orderby save as "&tmpfile"
+use "&tmpfile" in 0 current
+
+%>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" type="text/css" href="&m_libpath/gallery/css/normalize.css" />
+		<link rel="stylesheet" type="text/css" href="&m_libpath/gallery/fonts/font-awesome-4.3.0/css/font-awesome.min.css" />
+		<link rel="stylesheet" type="text/css" href="&m_libpath/gallery/css/style1.css" />
+		<script src="&m_libpath/gallery/js/modernizr.custom.js"></script>
+	</head>
+	<body style="overflow-y:auto;">
+		<div class="container">
+			<button id="menu-toggle" class="menu-toggle"><span>Menu</span></button>
+			<div id="theSidebar" class="sidebar" style="display:none;">
+				<button class="close-button fa fa-fw fa-close"></button>
+			</div>
+			<div id="theGrid" class="main" style="margin-left:0px !important;">
+				<section id="maingrid" class="grid">
+<%
+				scan
+					? '<a class="grid__item" href="#">'
+					do &m_tiledelegate
+					? '</a>'
+				endscan
+				? '</section>'
+				? '<section class="content">'
+				? '	<div class="scroll-wrap" style="overflow:auto;">'
+				goto top
+				scan
+					? '<article class="content__item">'
+					do &m_contentdelegate
+					? '</article>'
+				endscan
+				text raw
+				</div>
+				<button class="close-button"><i class="fa fa-close"></i><span>Close</span></button>
+				</section>
+			</div>
+		</div><!-- /container -->
+		<script src="&m_libpath/gallery/js/classie.js"></script>
+		<script src="&m_libpath/gallery/js/main.js?_v=1"></script>
+	</body>
+</html>
+endtext
+
+// delete temporary files
+use
+erase '&tmpfile..dbf'
+erase '&tmpfile..dbx'
+erase '&tmpfile..dbt'
+
+// restore record position as the table may be open in many places
+if m_recno <> 0
+	select &m_table
+	if not empty(m_tag)
+		set order tag &m_tag
+	endif
+	goto &m_recno
+endif
+
+// reselect cursor that was active on entry
+select &m_selected 
+
+%>

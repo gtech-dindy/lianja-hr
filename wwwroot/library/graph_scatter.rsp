@@ -1,0 +1,108 @@
+<%@ Language=Recital %>
+<html>
+
+<%
+private m_libpath
+if isPhoneGap()
+	m_libpath = "js/library"
+elseif isElectron()
+	m_libpath = iif(isElectronDebug(), "file:///library", "file:///resources/app.asar/library")
+else
+	m_libpath = libPath()
+endif
+? "<head>"
+? '<script src="&m_libpath/graphs/RGraph.common.core.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.tooltips.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.effects.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.common.key.js"></script>'
+? '<script src="&m_libpath/graphs/RGraph.scatter.js"></script>'
+? "</head>"
+%>
+
+<%
+set macros on
+//--
+// graph_scatter.rsp?parameter=value&parameter=value...
+//
+// parameters
+//--
+private m_width  = getParameter("width", "600") 
+private m_height = getParameter("height", "250") 
+private m_id     = getParameter("id", "graphCanvas") 
+private m_data = getParameter("data", "[67,78, 'blue', 'This is a tooltip'], [87,40,'red'],[97,60,'green']") 
+private m_labels = getParameter("labels", "'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'") 
+private m_guttertop = getParameter("guttertop", "25") 
+private m_gutterbottom = getParameter("gutterbottom", "25") 
+private m_gutterleft = getParameter("gutterleft", "50") 
+private m_gutterright = getParameter("gutterright", "60") 
+private m_shadow  = getParameter("shadow", "true") 
+private m_title  = getParameter("title", "Untitled Scatter Chart") 
+private m_titleforecolor  = getParameter("titleforecolor", "gray") 
+private m_titlebackcolor  = getParameter("titlebackcolor", "") 
+private m_labelsabove  = getParameter("labelsabove", "true") 
+private m_margin  = getParameter("margin", "5") 
+private m_colors  = getParameter("colors", "'#fff', '#eef', '#ddf', '#ccf', '#bbf', '#bbf', '#aaf', '#99f'") 
+private m_max  = getParameter("max", "365") 
+private m_labelforecolor  = getParameter("labelforecolor", "gray") 
+private m_backcolor  = getParameter("backcolor", "#f7f7f7") 
+private m_effects  = getParameter("effects", "true") 
+
+// emit javascript code
+text raw
+<body style="background:&m_backcolor;overflow:hidden;">
+<style>
+.center-div
+{
+     position: relative;
+     margin: auto;
+     top: 0;
+     right: 0;
+     bottom: 0;
+     left: 0;
+     width: &m_width.px;
+     height: &m_height.px;
+}
+</style>
+<div class="center-div">
+<canvas id="&m_id" width="&m_width.px" height="&m_height.px" style="background:&m_backcolor;overflow:hidden;">[No canvas support]</canvas>
+</div>
+<script>
+    window.onload = function ()
+    {
+ 		var effects = &m_effects;
+
+       	// The data as shown on the chart. Each point is an array, described below.
+       	// x,y,color
+        var data = [  &m_data ];
+        
+        // Create the Scatter chart. The arguments are: the canvas ID and the data to be represented on the chart.
+        var chart = new RGraph.Scatter('&m_id', data);
+        
+        // Configure the chart to look as you want it to.
+        chart.Set('chart.background.barcolor1','white');
+        chart.Set('chart.background.barcolor2', 'white');
+	   	chart.Set('chart.axis.color', 'gray');
+        chart.Set('chart.grid.color', 'rgba(238,238,238,1)');
+        chart.Set('chart.labels', [&m_labels]);
+        chart.Set('chart.xmax', &m_max); 
+        chart.Set('chart.gutter.left', &m_gutterleft);
+    	chart.Set('chart.gutter.right', &m_gutterright);
+    	chart.Set('chart.gutter.top', &m_guttertop);
+    	chart.Set('chart.gutter.bottom', &m_gutterbottom);
+    	chart.Set('chart.shadow', &m_shadow);
+        
+ 	    chart.Set('chart.title', '&m_title');
+	    if ('&m_titlebackcolor' != '') chart.Set('chart.title.background', '&m_titlebackcolor');
+	    chart.Set('chart.title.color', '&m_titleforecolor');		
+  	    chart.Set('chart.text.color', '&m_labelforecolor');
+       
+        // Now call the .Draw() method to draw the chart.
+		if (effects) RGraph.Effects.Fade.In(chart);
+	    else chart.Draw();
+    }
+</script>
+
+endtext
+%>
+</body>
+</html>

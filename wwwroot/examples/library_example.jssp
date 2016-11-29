@@ -1,0 +1,3 @@
+print("Hello world " + new Date() + "</br>");
+print($_SERVER["SERVER_SOFTWARE"] + "</br>");
+print("Lianja.version=" + Lianja.version + "</br>");

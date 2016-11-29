@@ -1,0 +1,53 @@
+<%@ Language=VFP %>
+<html>
+<head>
+</head>
+<body>
+<%
+? "<table width='80%' align=center cellpadding=12>"
+? "<tr>"
+? "<td align=center colspan=2>"
+? "<h1>Lianja example - image queries</h1>"
+? '<p>Customize this to suit your own needs. This is a just an example.<p>'
+? '<hr size="1px" color="lightgray"/>'
+? "</td>"
+? "</tr>"
+? "<tr>"
+? "<td colspan=2>"
+? "<h3>Employees</h3>"
+? "</td>"
+? "</tr>"
+
+// scan through the employees table
+open database southwind
+use employees
+scan
+	? "<tr>"
+	? "<td>"
+	m_tmpnam = tmpnam()
+	objectwrite(m_tmpnam,photo)
+	base64_encode_file(m_tmpnam, objectType(photo), "200px", "200px")
+	erase &m_tmpnam
+	? "</td>"
+	? "<td>"
+	? mtos(notes) + "<a href='../odata/southwind/orders("+etos(employeeid)+",employeeid)'> JSON download of orders for "+ trim(firstname) + " " + lastname + "</a>"
+	? "</td>"
+	? "<tr>"
+	? '<td colspan="2">'
+	? '<hr size="1px" color="lightgray"/>'
+	? "</td>"
+	? "</tr>"
+	? "</tr>"
+endscan
+close data
+
+? "<tr>"
+? "<td align=center colspan=2>"
+? "<p>Copyright © 2013 Lianja Inc. All rights reserved worldwide.</p>"
+? "<h3><a href 'http://www.lianja.com'> www.lianja.com</a></h3>"
+? "</td>"
+? "</tr>"
+? "</table>"
+%>
+</body>
+</html>

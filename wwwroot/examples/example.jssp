@@ -1,0 +1,191 @@
+<%@ Language=JavaScript %>
+<!--
+
+	The Lianja Cloud Server includes the following features/functionality:
+		-- Lianja SQL Server for ODBC data access
+		-- Lianja OData Server
+		-- Lianja WebSockets Server
+		-- Visual FoxPro Server Pages (.rsp files)
+		-- JavaScript Server Pages (.jssp files)
+		-- Lianja HTML5/JavaScript Web Client
+		-- Lianja HTML5/JavaScript Mobile Client
+
+	Lianja/VFP Server pages (.rsp) have the complete Lianja scripting engine embedded in them.
+	---------------------------------------------------------------------------------------------
+	When a Lianja/VFP Server Page is executed the following are available to the script
+	in addition to the complete VFP compatible cross-platform scripting language 
+	implemented in Lianja.
+	
+	Global associative arrays:
+	
+		$_REQUEST[]
+		$_SERVER[]
+		$_ARGS[]
+		$_GET[]
+		$_POST[]
+		$_FILES[]
+		$_COOKIE[]
+		$_SESSION[]
+	
+	Global objects:
+	
+		Response
+			write( text )
+			writeFile( filename )
+			addCookie(name, value)
+			addHeader(name, value)
+			clear()
+			flush()
+			redirect( url )
+			authenticate( [message] )
+			appendToLog( message )
+			include( filename )
+			
+	Built-in commands/functions:
+	
+		? cExpression 
+		echo cExpression 
+		move_uploaded_file(tofilename, fromfilename)
+		die(message)
+		include( cExpression )
+		object = require( cExpression )
+		odata_Create( url, jsondatastring )
+		odata_Read( url [, filename] )
+		odata_Update( url, jsondatastring )
+		odata_Delete( url, jsondatastring )
+	
+	JavaScript Server Pages are modelled on PHP Server Pages. 
+	---------------------------------------------------------
+	When a JavaScript Server Page is executed the following are available to the script
+	in addition to the built-in JavaScript functions. These will be familiar to PHP 
+	Web developers.
+	
+	Global associative arrays(objects):
+	
+		$_REQUEST[]
+		$_SERVER[]
+		$_ARGS[]
+		$_GET[]
+		$_POST[]
+		$_FILES[]
+		$_COOKIE[]
+		$_SESSION[]
+	
+	Global objects:
+	
+		Lianja.
+			execute( vfp_command )
+			evaluate( vfp_expression )
+			openDatabase( databasename )
+				openRecordSet( table_or_sqlselect )
+					moveFirst()
+					moveNext()
+					movePrevious()
+					moveLast()
+					move()
+					moveRelative()
+					moveBookmark()
+					findFirst( condition )
+					findNext( condition )
+					findPrevious( condition )
+					findLast( condition )
+					edit()
+					update()
+					delete()
+					requery()
+					field( name_or_number )
+						.name
+						.type
+						.width
+						.decimals
+						.value
+					close()
+					bof
+					eof
+					found
+					nomatch
+					recno
+					reccount
+					fieldcount
+					index
+					filter
+				close()
+		Response
+			write( text )
+			writeFile( filename )
+			addCookie(name, value)
+			addHeader(name, value)
+			clear()
+			flush()
+			redirect( url )
+			authenticate( [message] )
+			appendToLog( message )
+			include( filename )
+	
+	Built-in functions:
+	
+		print( cExpression );
+		echo( cExpression );
+		move_uploaded_file(tofilename, fromfilename);
+		die(message);
+		debugout(message);
+		include( cExpression );
+		object = require( cExpression );
+		odata_Create( url, jsondatastring );
+		odata_Read( url [, filename] );
+		odata_Update( url, jsondatastring );
+		odata_Delete( url, jsondatastring );
+		tmpnam()
+		objectType( object_fieldname )
+		objectRead( from_filename, object_fieldname )
+		objectWrite( to_filename, object_fieldname )
+		base64_encode_object( object_fieldname, width, height)
+		unlink( filename )
+
+	The following is an example Lianja JavaScript Server Page.
+			
+-->
+<html>
+<body>
+<%
+	// Note that just as in PHP, JavaScript Server Pages can use include_once( filename) and include(filename)
+	// The path of the filename is relative to the directory containing this script.
+	include_once("library_example.jssp");
+
+	// The Lianja global object provides embedded database access
+	db = Lianja.openDatabase("southwind");
+	print("db=" + typeof db); 
+	print("<br>");
+	
+	// Lianja.openDatabase() returns a Database object so now we can open a RecordSet
+	rs = db.openRecordSet("select * from customers");
+	print("rs=" + typeof rs); 
+	print("<br>");
+	print("Fieldcount="+rs.fieldcount);
+	print("<br>");
+%>
+<table>
+<%
+	print("<tr>");
+	for (i=0; i<rs.fieldcount; ++i)
+	{
+		print("<td>"+rs.field(i).name+"</td>");
+	}
+	print("</tr>");
+	rs.moveFirst();
+	for (j=0; j<rs.reccount; ++j)
+	{
+		print("<tr valign='top'>");
+		for (i=0; i<rs.fieldcount; ++i)
+		{
+			print("<td>"+rs.field(i).value+"</td>");
+		}
+		print("</tr>");
+		rs.moveNext();
+	}
+	rs.close();
+	db.close();
+%>
+</table>
+</body>
+</html>

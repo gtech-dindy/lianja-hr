@@ -1,0 +1,120 @@
+<!--
+
+	This is a simple wrapper for the bootstrap responsive editor which is used to edit WebViews.
+	
+-->
+
+<%@ Language=VFP %>
+<%
+//--
+private m_libpath
+if isPhoneGap()
+	m_libpath = "js/library"
+elseif isElectron()
+	m_libpath = iif(isElectronDebug(), "file:///library", "file:///resources/app.asar/library")
+else
+	m_libpath = "../../library/"
+endif
+text raw
+<html>
+<head>
+	<meta content="text/html; charset=utf-8" http-equiv="content-type" />
+	<script type="text/javascript" src="&m_libpath/jquery/js/jquery.min.js"></script>
+	<link  href="&m_libpath/redactor/css/style.css" rel="stylesheet" type="text/css" /> 		
+	<link  href="&m_libpath2/redactor.css" rel="stylesheet" type="text/css" />	
+	<script src="&m_libpath2/redactor.min.js"></script>
+	<script type="text/javascript">
+    	var m_data = "";
+	    var m_ready = false;
+		$(document).ready(
+			function()
+			{
+				$('#redactor').redactor(
+					{
+						buttons: ['fontcolor', 'backcolor', 
+									'|', 'formatting', 
+									'|', 'bold', 'italic', 'deleted', 
+									'|', 'unorderedlist', 'orderedlist', 'outdent', 'indent', 
+									'|', 'alignment', 
+									'|', 'horizontalrule'
+								 ],
+						fixed: true
+					}
+				);
+				m_ready = true;
+				$('#redactor').setCode(m_data);
+			}
+		);
+        function isReady() 
+		{
+			return m_ready;
+        }
+	</script>
+	<style type="text/css">
+		body { 
+			margin: 0px ;
+			padding : 0px ;
+			height : 100% !important;
+			overflow-y: none;
+			background: white;
+		}
+		.editorwrapper {
+			overflow-x: auto;
+			overflow-y: none;
+			height : 100% !important;
+			width : 100%;
+		}
+		.lianjaeditor { 
+			overflow-y: none;
+			-webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+			-moz-box-sizing: border-box;    /* Firefox, other Gecko */
+			box-sizing: border-box;         /* Opera/IE 8+ */
+			height : 0 !important;
+			width : 0 !important;
+			display:none;
+		}
+	</style>
+    <script type="text/javascript">
+		//--------------------------------------------------------------------------------
+        function resizeEditorWrapper() 
+        {
+	        //var heightOfBody = document.documentElement.clientHeight;
+            //document.getElementById('page').style.height = heightOfBody - 8;
+ 	        if (m_ready)
+	       	{
+				$('#redactor').setCode(m_data);
+			}
+        }
+		//--------------------------------------------------------------------------------
+        function lianja_resize() 
+        {
+        }
+		//--------------------------------------------------------------------------------
+        function getEditorData()
+        {
+        	return $('#redactor').getCode();
+	    }
+		//--------------------------------------------------------------------------------
+       	function setEditorData(data)
+        {
+ 	        m_data = unescape(data);
+ 	        if (m_ready)
+	       	{
+				$('#redactor').setCode(m_data);
+			}
+			return true;
+	    }
+    </script>
+</head>
+
+<!-- This is just a wrapper for redactor onload="resizeEditorWrapper();" onresize="lianja_resize();" -->
+<body>
+	<div id="page">
+	<textarea id="redactor" name="readactor_content" class="lianjaeditor">
+	</textarea>
+	</div>
+</body>
+</html>
+endtext
+%>
+

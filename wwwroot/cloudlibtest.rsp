@@ -1,0 +1,120 @@
+<%@ Language=VFP %>
+<html>
+<head>
+<link rel='stylesheet' href='../library/bootstrap/css/bootstrap.min.css' type='text/css'/>
+<style type='text/css'>
+body {
+	margin:10px;
+}
+</style>
+</head>
+<body>
+<%
+////////////////////////////////////////////////////////////////////////////////////////
+private obj
+private querytime
+private ca
+
+? "<h3 style='width:100%;background-color:lightblue;color:white;padding-left:5px;'>createObject('cursoradaptor')</h3>"
+? "<pre>"
+text raw
+obj = createObject("cursoradaptor")
+? obj
+endtext
+? "</pre>"
+obj = createObject("cursoradaptor")
+? "<pre>"
+? obj
+? "</pre>"
+
+////////////////////////////////////////////////////////////////////////////////////////
+? "<h3 style='width:100%;background-color:lightblue;color:white;padding-left:5px;'>createObject('networkrequest')</h3>"
+? "<pre>"
+text raw
+obj = createObject("networkrequest")
+? obj.getData("http://www.lianja.com/versions.txt")
+endtext
+? "</pre>"
+obj = createObject("networkrequest")
+? "<pre>"
+? obj
+? "Data returned below:"
+? obj.getData("http://www.lianja.com/versions.txt")
+? "</pre>"
+
+////////////////////////////////////////////////////////////////////////////////////////
+open database cloudlibtest
+timeofday(0)
+
+////////////////////////////////////////////////////////////////////////////////////////
+? "<h3 style='width:100%;background-color:lightblue;color:white;padding-left:5px;'>Open Virtual Table to MySQL</h3>"
+
+? "<pre>"
+text raw
+use vt_actors where last_name='GABLE'
+list html off
+endtext
+? "</pre>"
+
+use vt_actors where last_name='GABLE' 
+querytime = "<p>" + etos(reccount()) + " record(s) selected in " + timeofday(7) + "</p>"
+list html off
+? "<b>" + querytime + "</b>"
+
+? "<pre>"
+text raw
+ca = cursoradaptor()
+ca.requery("last_name='PALTROW'")
+list html off
+endtext
+? "</pre>"
+
+ca = cursoradaptor()
+ca.requery("last_name='PALTROW'")
+querytime = "<p>" + etos(reccount()) + " record(s) selected in " + timeofday(7) + "</p>"
+list html off
+? "<b>" + querytime + "</b>"
+
+////////////////////////////////////////////////////////////////////////////////////////
+? "<h3 style='width:100%;background-color:lightblue;color:white;padding-left:5px;'>Open Virtual Table to MSSQL</h3>"
+
+? "<pre>"
+text raw
+use vt_customers where Accountnumber='AW00000006'
+list html off
+endtext
+? "</pre>"
+
+use vt_customers where Accountnumber='AW00000006'
+querytime = "<p>" + etos(reccount()) + " record(s) selected in " + timeofday(7) + "</p>"
+list html off
+? "<b>" + querytime + "</b>"
+
+? "<pre>"
+text raw
+ca = cursoradaptor()
+ca.requery("Accountnumber='AW00000008'")
+list html off
+endtext
+? "</pre>"
+
+ca = cursoradaptor()
+ca.requery("Accountnumber='AW00000008'")
+querytime = "<p>" + etos(reccount()) + " record(s) selected in " + timeofday(7) + "</p>"
+list html off
+? "<b>" + querytime + "</b>"
+
+? "<pre>"
+text raw
+ca.requery("Accountnumber='AW00000009'")
+list html off
+endtext
+? "</pre>"
+
+ca.requery("Accountnumber='AW00000009'")
+querytime = "<p>" + etos(reccount()) + " record(s) selected in " + timeofday(7) + "</p>"
+list html off
+? "<b>" + querytime + "</b>"
+%>
+</body>
+</html>

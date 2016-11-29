@@ -1,0 +1,16 @@
+<%@ Language=VFP %>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Lianja example - authentication</title>
+</head>
+<body>
+<%
+if len(_SERVER["AUTH_TYPE"]) = 0 .or. len(_SERVER["REMOTE_USER"]) = 0 .or. len(_SERVER["REMOTE_PASSWORD"]) = 0
+	response.Authenticate()
+endif
+	? "Hi " + proper(_SERVER["REMOTE_USER"]) + ", You have authenticated successfully."
+	? '<br>'
+%>
+</body>
+

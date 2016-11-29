@@ -1,0 +1,78 @@
+<%@ Language=VFP %>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>Lianja example - HTTP request information</title>
+</head>
+<body>
+<h1>Lianja example - HTTP request information</h1>
+<p>Press the browser refresh key to refresh the session variables.<p>
+<%
+? "<hr>"
+cc=len(_server)
+? "<h2>_server[ ] elements ("+alltrim(str(cc))+")</h2>"
+foreach _server as name=>value 
+   ? "<br>   &name="+etos(value)
+next
+? "<br>"
+
+? "<hr>"
+cc=len(_COOKIE)
+if cc > 0
+	? "<h2>Active session Cookies ("+alltrim(str(cc))+")</h2>"
+	foreach _cookie as name=>value 
+		? "<br>   &name="+etos(value)
+	endfor
+else
+	? "There are no active session cookies."
+endif
+? "<br>"
+
+? "<hr>"
+ss=len(_SESSION)
+if ss > 0
+	? "<h2>Active session variables ("+alltrim(str(ss))+")</h2>"
+	foreach _session as name=>value 
+		? "<br>   &name="+etos(value)
+		next
+else
+	? "There are no active session variables."
+endif
+? "<br>"
+
+? "<hr>"
+? "<h2>_request[ ] elements ("+alltrim(str(ss))+")</h2>"
+foreach _request as name=>value 
+   ? "<br>   &name="+etos(value)
+next
+? "<br>"
+
+? "<hr>"
+ss=len(_get)
+? "<h2>_get[ ] elements ("+alltrim(str(ss))+")</h2>"
+foreach _get as name=>value 
+   ? "<br>   &name="+etos(value)
+next
+? "<br><br>"
+
+? "<hr>"
+ss=len(_post)
+? "<h2>_post[ ] elements ("+alltrim(str(ss))+")</h2>"
+foreach _post as name=>value 
+   ? "<br>   &name="+etos(value)
+next
+? "<br>"
+
+? "<hr>"
+ss=len(_args)
+? "<h2>_args[ ] elements ("+alltrim(str(ss))+")</h2>"
+foreach _args as name=>value 
+   ? "<br>   &name="+etos(value)
+next
+
+_session["time"] = time()
+%>
+
+</body>
+</html>
+

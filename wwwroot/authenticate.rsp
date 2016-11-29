@@ -1,0 +1,9 @@
+<%@ Language=VFP %>
+<%
+if len(_SERVER["AUTH_TYPE"]) = 0 .or. len(_SERVER["REMOTE_USER"]) = 0 .or. len(_SERVER["REMOTE_PASSWORD"]) = 0
+	?? 'Nok'
+else
+    ?? 'Ok'
+endif
+%>
+
